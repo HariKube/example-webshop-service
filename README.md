@@ -1,16 +1,13 @@
 # example-webshop-service
-// TODO(user): Add simple overview of use/purpose
-
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+This project is an example webshop service o demonstrate development simplicity with HariKube.
 
 ## Getting Started
 
 ### Prerequisites
 - go version v1.24.0+
 - docker version 17.03+.
-- kubectl version v1.11.3+.
-- Access to a Kubernetes v1.11.3+ cluster.
+- kubectl version v1.34.0+.
+- Access to a Kubernetes v1.34.0+ cluster.
 
 ### To Deploy on the cluster
 **Build and push your image to the location specified by `IMG`:**
