@@ -26,10 +26,6 @@ import (
 // TenantSpec defines the desired state of Tenant.
 type TenantSpec struct {
 	// +kubebuilder:validation:Required
-	// OwnerRef represents the owner reference of the tenant.
-	OwnerRef metav1.OwnerReference `json:"ownerRef"`
-
-	// +kubebuilder:validation:Required
 	// DisplayName represents the human friendly name of the addon.
 	DisplayName string `json:"displayName"`
 
@@ -39,18 +35,18 @@ type TenantSpec struct {
 
 	// +kubebuilder:validation:Required
 	// Users represents the associated users information.
-	UserRefs []User `json:"userRefs"`
+	UserRefs []RemoteObjectReference `json:"userRefs"`
 }
 
 // TenantStatus defines the observed state of Tenant.
 type TenantStatus struct {
+	LastGeneration int64 `json:"lastGeneration,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Owner",type="string",JSONPath=".spec.ownerRef.name"
+// +kubebuilder:resource:scope=Cluster
 // +kubebuilder:printcolumn:name="DisplayName",type="string",JSONPath=".spec.displayName"
-// +kubebuilder:selectablefield:JSONPath=".spec.ownerRef.name"
 // +kubebuilder:selectablefield:JSONPath=".spec.displayName"
 
 // Tenant is the Schema for the tenants API.

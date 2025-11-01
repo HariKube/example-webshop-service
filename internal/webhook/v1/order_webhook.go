@@ -72,7 +72,7 @@ func (d *OrderCustomDefaulter) Default(_ context.Context, obj runtime.Object) er
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 // NOTE: The 'path' attribute must follow a specific pattern and should not be modified directly here.
 // Modifying the path for an invalid path can cause API server errors; failing to locate the webhook.
-// +kubebuilder:webhook:path=/validate-product-webshop-harikube-info-v1-order,mutating=false,failurePolicy=fail,sideEffects=None,groups=product.webshop.harikube.info,resources=orders,verbs=create;update,versions=v1,name=vorder-v1.kb.io,admissionReviewVersions=v1
+// +kubebuilder:webhook:path=/validate-product-webshop-harikube-info-v1-order,mutating=false,failurePolicy=fail,sideEffects=None,groups=product.webshop.harikube.info,resources=orders,verbs=create;update;delete,versions=v1,name=vorder-v1.kb.io,admissionReviewVersions=v1
 
 // OrderCustomValidator struct is responsible for validating the Order resource
 // when it is created, updated, or deleted.

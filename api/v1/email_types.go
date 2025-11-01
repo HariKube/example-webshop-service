@@ -23,10 +23,6 @@ import (
 // EmailSpec defines the desired state of Email.
 type EmailSpec struct {
 	// +kubebuilder:validation:Required
-	// OwnerRef represents the owner reference of the email.
-	OwnerRef metav1.OwnerReference `json:"ownerRef"`
-
-	// +kubebuilder:validation:Required
 	// FromAddress represents the email address of the recipient.
 	ToAddress string `json:"toAddress"`
 
@@ -49,6 +45,7 @@ type EmailSpec struct {
 
 // EmailStatus defines the observed state of Email.
 type EmailStatus struct {
+	LastGeneration int64       `json:"lastGeneration,omitempty"`
 	ErrorMessage   string      `json:"errorMessage,omitempty"`
 	ErrorTimestamp metav1.Time `json:"errorTimestamp,omitempty"`
 	SentTimestamp  metav1.Time `json:"sentTimestamp,omitempty"`
@@ -56,11 +53,9 @@ type EmailStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Owner",type="string",JSONPath=".spec.ownerRef.name"
 // +kubebuilder:printcolumn:name="Email",type="string",JSONPath=".spec.toAddress"
-// +kubebuilder:printcolumn:name="SentTime",type="string",JSONPath=".status.sentTimestamp"
+// +kubebuilder:printcolumn:name="Sent",type="date",JSONPath=".status.sentTimestamp"
 // +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.errorMessage"
-// +kubebuilder:selectablefield:JSONPath=".spec.ownerRef.name"
 // +kubebuilder:selectablefield:JSONPath=".spec.toAddress"
 
 // Email is the Schema for the emails API.

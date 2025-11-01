@@ -24,6 +24,10 @@ import (
 // UserSpec defines the desired state of User.
 type UserSpec struct {
 	// +kubebuilder:validation:Required
+	// PasswordRef references the Secret containing the user's password.
+	PasswordRef *corev1.LocalObjectReference `json:"passwordRef"`
+
+	// +kubebuilder:validation:Required
 	// FirstName represents the first name of the user.
 	// Allow basic Unicode letters, spaces, apostrophes, and hyphens.
 	// +kubebuilder:validation:MinLength=1
@@ -87,21 +91,15 @@ type UserSpec struct {
 	// +kubebuilder:validation:MaxLength=15
 	// +kubebuilder:validation:Pattern=`^\+?[1-9]\d{1,14}$`
 	PhoneNumber *string `json:"phoneNumber,omitempty"`
-
-	// +kubebuilder:validation:Optional
-	// Tenants represents the list of tenants associated with the user.
-	Tenants []corev1.LocalObjectReference `json:"tenants,omitempty"`
 }
 
 // UserStatus defines the observed state of User.
 type UserStatus struct {
+	LastGeneration int64 `json:"lastGeneration,omitempty"`
 	// +kubebuilder:validation:Enum=Pending;Validated
 	// +kubebuilder:default=Pending
-	Phase string `json:"phase,omitempty"`
-
-	ValidatedEmail string `json:"validatedEmail,omitempty"`
-
-	PasswordRef *corev1.LocalObjectReference `json:"passwordRef,omitempty"`
+	Phase      string                        `json:"phase,omitempty"`
+	TenantRefs []corev1.LocalObjectReference `json:"tenantRefs,omitempty"`
 }
 
 // +kubebuilder:object:root=true

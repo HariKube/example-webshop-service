@@ -27,10 +27,6 @@ import (
 // RegistryTokenSpec defines the desired state of RegistryToken.
 type RegistryTokenSpec struct {
 	// +kubebuilder:validation:Required
-	// OwnerRef represents the owner reference of the order.
-	OwnerRef metav1.OwnerReference `json:"ownerRef"`
-
-	// +kubebuilder:validation:Required
 	// DisplayName represents the human friendly name of the addon.
 	DisplayName string `json:"displayName"`
 
@@ -43,12 +39,13 @@ type RegistryTokenSpec struct {
 	User User `json:"user"`
 
 	// +kubebuilder:validation:Required
-	// ExpirationTimestamp represents the expiration time of the registry token.
-	ExpirationTimestamp metav1.Time `json:"expirationTimestamp"`
+	// ExpireTimestamp represents the expiration time of the registry token.
+	ExpireTimestamp metav1.Time `json:"expireTimestamp"`
 }
 
 // RegistryTokenStatus defines the observed state of RegistryToken.
 type RegistryTokenStatus struct {
+	LastGeneration int64                        `json:"lastGeneration,omitempty"`
 	ErrorMessage   string                       `json:"errorMessage,omitempty"`
 	ErrorTimestamp metav1.Time                  `json:"errorTimestamp,omitempty"`
 	TokenRef       *corev1.LocalObjectReference `json:"tokenRef,omitempty"`
@@ -56,11 +53,9 @@ type RegistryTokenStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Owner",type="string",JSONPath=".spec.ownerRef.name"
 // +kubebuilder:printcolumn:name="DisplayName",type="string",JSONPath=".spec.displayName"
-// +kubebuilder:printcolumn:name="Expiring",type="string",JSONPath=".spec.expirationTimestamp"
+// +kubebuilder:printcolumn:name="Expire",type="date",JSONPath=".spec.expireTimestamp"
 // +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.errorMessage"
-// +kubebuilder:selectablefield:JSONPath=".spec.ownerRef.name"
 // +kubebuilder:selectablefield:JSONPath=".spec.displayName"
 
 // RegistryToken is the Schema for the registrytokens API.

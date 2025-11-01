@@ -24,10 +24,6 @@ import (
 // LicenceSpec defines the desired state of Licence.
 type LicenceSpec struct {
 	// +kubebuilder:validation:Required
-	// OwnerRef represents the owner reference of the license.
-	OwnerRef metav1.OwnerReference `json:"ownerRef"`
-
-	// +kubebuilder:validation:Required
 	// DisplayName represents the human friendly name of the licence.
 	DisplayName string `json:"displayName"`
 
@@ -38,21 +34,24 @@ type LicenceSpec struct {
 	// +kubebuilder:validation:Required
 	// Addons represents the list of addons associated with this licence.
 	Addons []Addon `json:"addons"`
+
+	// +kubebuilder:validation:Required
+	// ExpireTimestamp represents the expiration date of the licence.
+	ExpireTimestamp metav1.Time `json:"expireTimestamp,omitempty"`
 }
 
 // LicenceStatus defines the observed state of Licence.
 type LicenceStatus struct {
-	ErrorMessage    string                       `json:"errorMessage,omitempty"`
-	ErrorTimestamp  metav1.Time                  `json:"errorTimestamp,omitempty"`
-	ExpireTimestamp metav1.Time                  `json:"sentTimestamp,omitempty"`
-	LicenceRef      *corev1.LocalObjectReference `json:"licenceKey,omitempty"`
+	LastGeneration int64                        `json:"lastGeneration,omitempty"`
+	ErrorMessage   string                       `json:"errorMessage,omitempty"`
+	ErrorTimestamp metav1.Time                  `json:"errorTimestamp,omitempty"`
+	LicenceRef     *corev1.LocalObjectReference `json:"licenceKey,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Owner",type="string",JSONPath=".spec.ownerRef.name"
 // +kubebuilder:printcolumn:name="DisplayName",type="string",JSONPath=".spec.displayName"
-// +kubebuilder:selectablefield:JSONPath=".spec.ownerRef.name"
+// +kubebuilder:printcolumn:name="Expire",type="date",JSONPath=".spec.expireTimestamp"
 // +kubebuilder:selectablefield:JSONPath=".spec.displayName"
 
 // Licence is the Schema for the licences API.

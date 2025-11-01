@@ -24,10 +24,6 @@ import (
 // OrderSpec defines the desired state of Order.
 type OrderSpec struct {
 	// +kubebuilder:validation:Required
-	// OwnerRef represents the owner reference of the order.
-	OwnerRef metav1.OwnerReference `json:"ownerRef"`
-
-	// +kubebuilder:validation:Required
 	// User represents the order user information.
 	User UserSpec `json:"user"`
 
@@ -44,8 +40,8 @@ type OrderSpec struct {
 	Coupon Coupon `json:"couponCode,omitempty"`
 
 	// +kubebuilder:validation:Required
-	// OrderDate represents the date when the order was placed.
-	OrderDate metav1.Time `json:"orderDate"`
+	// OrderTimestamp represents the date when the order was placed.
+	OrderTimestamp metav1.Time `json:"orderTimestamp"`
 }
 
 // OrderProduct represents a product within an order.
@@ -68,6 +64,7 @@ type OrderProduct struct {
 
 // OrderStatus defines the observed state of Order.
 type OrderStatus struct {
+	LastGeneration int64                        `json:"lastGeneration,omitempty"`
 	ErrorMessage   string                       `json:"errorMessage,omitempty"`
 	ErrorTimestamp metav1.Time                  `json:"errorTimestamp,omitempty"`
 	TotalPrice     int64                        `json:"totalPrice,omitempty"`
@@ -77,11 +74,10 @@ type OrderStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Owner",type="string",JSONPath=".spec.ownerRef.name"
-// +kubebuilder:printcolumn:name="OrderDate",type="string",JSONPath=".spec.orderDate"
+// +kubebuilder:printcolumn:name="Date",type="date",JSONPath=".spec.orderTimestamp"
 // +kubebuilder:printcolumn:name="User",type="string",JSONPath=".spec.user.spec.email"
 // +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.errorMessage"
-// +kubebuilder:selectablefield:JSONPath=".spec.ownerRef.name"
+// +kubebuilder:printcolumn:name="Price",type="number",JSONPath=".status.totalPrice"
 
 // Order is the Schema for the orders API.
 type Order struct {

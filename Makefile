@@ -1,5 +1,15 @@
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+TAG ?= $(shell git describe --tags --abbrev=0)
+IMG ?= harikube/example-webshop-service:$(TAG)
+
+DIFF = $(shell git rev-list refs/tags/$(TAG)..HEAD --count)
+ifneq ($(DIFF), 0)
+IMG := $(IMG)-$(DIFF)
+endif
+
+ifneq ($(shell git status -s | wc -l), 0)
+IMG := $(IMG)-dirty
+endif
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -67,21 +77,28 @@ test: manifests generate fmt vet setup-envtest ## Run tests.
 # - CERT_MANAGER_INSTALL_SKIP=true
 KIND_CLUSTER ?= example-webshop-service-test-e2e
 
-.PHONY: setup-test-e2e
-setup-test-e2e: cleanup-test-e2e ## Set up a Kind cluster for e2e tests if it does not exist
+.PHONY: setup-test-integration
+setup-test-integration: cleanup-test-integration ## Set up a Kind cluster for integration tests if it does not exist
 	@command -v $(KIND) >/dev/null 2>&1 || { \
-		echo "Kind is not installed. Please install Kind manually."; \
+		echo "Kind is not installed. Please execute make deps."; \
 		exit 1; \
 	}
-	$(KIND) create cluster --name $(KIND_CLUSTER)
 
-.PHONY: test-e2e
-test-e2e: setup-test-e2e manifests generate fmt vet ## Run the e2e tests. Expected an isolated environment using Kind.
-	KIND_CLUSTER=$(KIND_CLUSTER) go test ./test/e2e/ -v -ginkgo.v
-	$(MAKE) cleanup-test-e2e
+	$(KIND) create cluster --name $(KIND_CLUSTER) --config test/integration/kind-configs/config-$(KUBE_VERSION).yaml
 
-.PHONY: cleanup-test-e2e
-cleanup-test-e2e: ## Tear down the Kind cluster used for e2e tests
+	$(KUBECTL) wait --for=condition=Ready node/$(KIND_CLUSTER)-control-plane --timeout=120s
+
+.PHONY: test-integration
+test-integration: chainsaw setup-test-integration _test-integration
+
+_test-integration:
+	$(CHAINSAW) test --test-dir test/integration/00-dependencies
+	$(CHAINSAW) test --test-dir test/integration/01-operator
+# 	$(CHAINSAW) test --test-dir test/integration/02-user
+# 	$(MAKE) cleanup-test-integration
+
+.PHONY: cleanup-test-integration
+cleanup-test-integration: ## Tear down the Kind cluster used for integration tests
 	@$(KIND) delete cluster --name $(KIND_CLUSTER)
 
 .PHONY: lint
@@ -117,6 +134,10 @@ docker-build: ## Build docker image with the manager.
 docker-push: ## Push docker image with the manager.
 	$(CONTAINER_TOOL) push ${IMG}
 
+.PHONY: docker-load
+docker-load: ## Loading docker image to Kind.
+	$(KIND) load docker-image -n $(KIND_CLUSTER) ${IMG}
+	
 # PLATFORMS defines the target platforms for the manager image be built to provide support to multiple
 # architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
 # - be able to use docker buildx. More info: https://docs.docker.com/build/buildx/
@@ -179,9 +200,10 @@ KUBE_BUILDER ?= $(LOCALBIN)/kubebuilder
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
 VCLUSTER ?= $(LOCALBIN)/vcluster
+CHAINSAW ?= $(LOCALBIN)/chainsaw
 
 ## Tool Versions
-KUBE_VERSION ?= v1.34.1
+KUBE_VERSION ?= v1.34.0
 KIND_VERSION ?= v0.30.0
 KUSTOMIZE_VERSION ?= v5.6.0
 CONTROLLER_TOOLS_VERSION ?= v0.18.0
@@ -192,6 +214,7 @@ ENVTEST_VERSION ?= $(shell go list -m -f "{{ .Version }}" sigs.k8s.io/controller
 ENVTEST_K8S_VERSION ?= $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
 GOLANGCI_LINT_VERSION ?= v2.1.0
 VCLUSTER_VERSION ?= v0.30.0
+CHAINSAW_VERSION ?= v0.2.12
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -202,6 +225,11 @@ $(KUSTOMIZE): $(LOCALBIN)
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
 	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
+
+.PHONY: chainsaw
+chainsaw: $(CHAINSAW) ## Download chainsaw locally if necessary.
+$(CHAINSAW): $(LOCALBIN)
+	$(call go-install-tool,$(CHAINSAW),github.com/kyverno/chainsaw,$(CHAINSAW_VERSION))
 
 .PHONY: setup-envtest
 setup-envtest: envtest ## Download the binaries required for ENVTEST in the local bin directory.
@@ -244,7 +272,7 @@ package: kustomize manifests generate
 
 	$(KUSTOMIZE) build config/default >> package/bundle.yaml
 
-deps: $(LOCALBIN) kustomize controller-gen envtest golangci-lint
+deps: $(LOCALBIN) kustomize controller-gen chainsaw envtest golangci-lint
 	curl -Lo $(KUBE_BUILDER) https://github.com/kubernetes-sigs/kubebuilder/releases/download/$(KUBE_BUILDER_VERSION)/kubebuilder_linux_amd64
 	chmod +x $(KUBE_BUILDER)
 

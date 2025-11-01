@@ -11,4 +11,5 @@ resources:
 - product_v1_tenant.yaml
 - product_v1_payment.yaml
 - product_v1_licence.yaml
+- product_v1_registrationrequest.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

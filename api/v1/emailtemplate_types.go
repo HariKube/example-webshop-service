@@ -49,6 +49,7 @@ type EmailTemplateSpec struct {
 
 // EmailTemplateStatus defines the observed state of EmailTemplate.
 type EmailTemplateStatus struct {
+	LastGeneration int64 `json:"lastGeneration,omitempty"`
 }
 
 // +kubebuilder:object:root=true

@@ -42,12 +42,13 @@ type AddonSpec struct {
 
 // AddonStatus defines the observed state of Addon.
 type AddonStatus struct {
+	LastGeneration int64 `json:"lastGeneration,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="DisplayName",type="string",JSONPath=".spec.displayName"
-// +kubebuilder:printcolumn:name="Price",type="string",JSONPath=".spec.price"
+// +kubebuilder:printcolumn:name="Price",type="number",JSONPath=".spec.price"
 // +kubebuilder:printcolumn:name="Type",type="string",JSONPath=".spec.addonType"
 // +kubebuilder:selectablefield:JSONPath=".spec.displayName"
 // +kubebuilder:selectablefield:JSONPath=".spec.addonType"

@@ -19,9 +19,12 @@ package controller
 import (
 	"context"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	productv1 "github.com/HariKube/example-webshop-service/api/v1"
@@ -49,17 +52,107 @@ type UserReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.21.0/pkg/reconcile
 func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+	logger := logf.FromContext(ctx).WithValues("controller", "user", "name", req.NamespacedName)
 
-	// TODO(user): your logic here
+	user := productv1.User{}
+	if err := r.Get(ctx, req.NamespacedName, &user); err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+
+		logger.Error(err, "User fetch failed")
+
+		return ctrl.Result{}, err
+	}
+
+	if user.DeletionTimestamp != nil || !user.DeletionTimestamp.IsZero() {
+		logger.Info("User deleted")
+
+		return ctrl.Result{}, nil
+	} else if user.Generation == 1 && user.Status.LastGeneration == 0 {
+		logger.Info("User created")
+	} else {
+		if user.Status.LastGeneration == user.Generation {
+			return ctrl.Result{}, nil
+		}
+
+		logger.Info("User updated")
+	}
+
+	// if len(user.Status.TenantRefs) == 0 {
+	// 	displayName := user.Spec.CompanyName
+	// 	if displayName == "" {
+	// 		displayName = fmt.Sprintf("%s %s", user.Spec.FirstName, user.Spec.LastName)
+	// 	}
+
+	// 	tenant := productv1.Tenant{
+	// 		ObjectMeta: metav1.ObjectMeta{
+	// 			Name: user.Name,
+	// 			OwnerReferences: []metav1.OwnerReference{
+	// 				{
+	// 					APIVersion:         user.APIVersion,
+	// 					Kind:               user.Kind,
+	// 					Name:               user.Name,
+	// 					UID:                user.UID,
+	// 					BlockOwnerDeletion: ptr.To(true),
+	// 				},
+	// 			},
+	// 		},
+	// 		Spec: productv1.TenantSpec{
+	// 			DisplayName: displayName,
+	// 			UserRefs: []productv1.RemoteObjectReference{
+	// 				{
+	// 					LocalObjectReference: corev1.LocalObjectReference{
+	// 						Name: user.Name,
+	// 					},
+	// 					Namespace: user.Namespace,
+	// 				},
+	// 			},
+	// 		},
+	// 	}
+
+	// 	if err := r.Create(ctx, &tenant); err != nil {
+	// 		if !apierrors.IsAlreadyExists(err) {
+	// 			return ctrl.Result{}, fmt.Errorf("failed to create tenant for user: %w", err)
+	// 		}
+
+	// 		return ctrl.Result{}, fmt.Errorf("a Tenant with the name '%s' already exists", user.Name)
+	// 	}
+
+	// 	logger.Info("Tenant has been created", "tenantName", tenant.Name)
+
+	// 	patchedUser := user.DeepCopy()
+	// 	patchedUser.Status.LastGeneration = user.Generation
+	// 	patchedUser.Status.TenantRefs = []corev1.LocalObjectReference{
+	// 		{
+	// 			Name: tenant.Name,
+	// 		},
+	// 	}
+
+	// 	if err := r.Status().Patch(ctx, patchedUser, client.MergeFrom(&user)); err != nil {
+	// 		if apierrors.IsNotFound(err) {
+	// 			return ctrl.Result{}, nil
+	// 		}
+
+	// 		logger.Error(err, "User status update failed")
+
+	// 		return ctrl.Result{}, err
+	// 	}
+	// }
 
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *UserReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *UserReconciler) SetupWithManager(mgr ctrl.Manager, needLeaderElection bool, maxConcurrentReconciles int) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&productv1.User{}).
 		Named("user").
+		WithOptions(controller.Options{
+			NeedLeaderElection:      ptr.To(needLeaderElection),
+			MaxConcurrentReconciles: maxConcurrentReconciles,
+			RecoverPanic:            ptr.To(true),
+			Logger:                  mgr.GetLogger(),
+		}).
 		Complete(r)
 }

@@ -20,7 +20,7 @@ spec:
       type: string
     - jsonPath: .spec.price
       name: Price
-      type: string
+      type: number
     name: v1
     schema:
       openAPIV3Schema:
@@ -100,6 +100,10 @@ spec:
                       type: object
                     status:
                       description: AddonStatus defines the observed state of Addon.
+                      properties:
+                        lastGeneration:
+                          format: int64
+                          type: integer
                       type: object
                   type: object
                 type: array
@@ -120,6 +124,10 @@ spec:
             type: object
           status:
             description: ProductStatus defines the observed state of Product.
+            properties:
+              lastGeneration:
+                format: int64
+                type: integer
             type: object
         type: object
     selectableFields:

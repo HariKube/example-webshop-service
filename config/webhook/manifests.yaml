@@ -83,6 +83,7 @@ webhooks:
     - UPDATE
     resources:
     - users
+    - users/status
   sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
@@ -107,6 +108,7 @@ webhooks:
     operations:
     - CREATE
     - UPDATE
+    - DELETE
     resources:
     - orders
   sideEffects: None
@@ -147,6 +149,7 @@ webhooks:
     operations:
     - CREATE
     - UPDATE
+    - DELETE
     resources:
     - tenants
   sideEffects: None
@@ -167,6 +170,7 @@ webhooks:
     operations:
     - CREATE
     - UPDATE
+    - DELETE
     resources:
     - users
   sideEffects: None

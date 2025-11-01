@@ -46,12 +46,13 @@ type CouponSpec struct {
 
 // CouponStatus defines the observed state of Coupon.
 type CouponStatus struct {
+	LastGeneration int64 `json:"lastGeneration,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="DisplayName",type="string",JSONPath=".spec.displayName"
-// +kubebuilder:printcolumn:name="Value",type="int64",JSONPath=".spec.value"
+// +kubebuilder:printcolumn:name="Value",type="integer",JSONPath=".spec.value"
 // +kubebuilder:printcolumn:name="Type",type="string",JSONPath=".spec.couponType"
 // +kubebuilder:selectablefield:JSONPath=".spec.displayName"
 // +kubebuilder:selectablefield:JSONPath=".spec.couponType"

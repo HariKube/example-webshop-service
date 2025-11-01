@@ -22,6 +22,9 @@ resources:
 # default, aiding admins in cluster management. Those roles are
 # not used by the example-webshop-service itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
+- registrationrequest_admin_role.yaml
+- registrationrequest_editor_role.yaml
+- registrationrequest_viewer_role.yaml
 - licence_admin_role.yaml
 - licence_editor_role.yaml
 - licence_viewer_role.yaml

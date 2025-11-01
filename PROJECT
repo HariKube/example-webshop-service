@@ -120,4 +120,13 @@ resources:
   kind: Licence
   path: github.com/HariKube/example-webshop-service/api/v1
   version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: webshop.harikube.info
+  group: product
+  kind: RegistrationRequest
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
 version: "3"

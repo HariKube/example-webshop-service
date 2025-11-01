@@ -13,6 +13,7 @@ resources:
 - bases/product.webshop.harikube.info_tenants.yaml
 - bases/product.webshop.harikube.info_payments.yaml
 - bases/product.webshop.harikube.info_licences.yaml
+- bases/product.webshop.harikube.info_registrationrequests.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

@@ -20,7 +20,7 @@ spec:
       type: string
     - jsonPath: .spec.value
       name: Value
-      type: int64
+      type: integer
     - jsonPath: .spec.couponType
       name: Type
       type: string
@@ -78,6 +78,10 @@ spec:
             type: object
           status:
             description: CouponStatus defines the observed state of Coupon.
+            properties:
+              lastGeneration:
+                format: int64
+                type: integer
             type: object
         type: object
     selectableFields:

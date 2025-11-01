@@ -58,22 +58,24 @@ func init() {
 
 // nolint:gocyclo
 func main() {
-	var namespace string
 	var metricsAddr string
 	var metricsCertPath, metricsCertName, metricsCertKey string
 	var webhookCertPath, webhookCertName, webhookCertKey string
 	var enableLeaderElection bool
+	var maxConcurrentReconciles int
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
 	var tlsOpts []func(*tls.Config)
-	flag.StringVar(&namespace, "namespace", "", "The namespace the operator reacts on trigger events.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+	flag.IntVar(&maxConcurrentReconciles, "max-concurrent-reconciles", 1,
+		"The maximum number of concurrent Reconciles which can be run. "+
+			"Defaults to 1 to preserve ordering of events. Increase this value to improve throughput if needed.")
 	flag.BoolVar(&secureMetrics, "metrics-secure", true,
 		"If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")
 	flag.StringVar(&webhookCertPath, "webhook-cert-path", "", "The directory that contains the webhook certificate.")
@@ -202,11 +204,6 @@ func main() {
 		// LeaderElectionReleaseOnCancel: true,
 		Cache: cache.Options{},
 	}
-	if namespace != "" {
-		options.Cache.DefaultNamespaces = map[string]cache.Config{
-			namespace: {},
-		}
-	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
 	if err != nil {
@@ -238,7 +235,7 @@ func main() {
 	if err := (&controller.UserReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(mgr, enableLeaderElection, maxConcurrentReconciles); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "User")
 		os.Exit(1)
 	}
@@ -290,6 +287,13 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "User")
 			os.Exit(1)
 		}
+	}
+	if err := (&controller.RegistrationRequestReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "RegistrationRequest")
+		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
 

@@ -65,7 +65,10 @@ jobs:
             ## Configuration
             For apply any configuration option please edit the Kubernetes manifests below and add extra arguments there.
 
-            - `--namespace`: The namespace the operator reacts on trigger events. Default is all namespaces.
+            ## Configuration
+            For apply any configuration option please edit the Kubernetes manifests below and add extra arguments there.
+
+            - `--max-concurrent-reconciles`: The maximum number of concurrent Reconciles which can be run. Default: 1.
 
             > Requires `MutatingAdmissionPolicy` feature gate enabled.
 

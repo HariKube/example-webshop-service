@@ -23,16 +23,13 @@ import (
 // PaymentSpec defines the desired state of Payment.
 type PaymentSpec struct {
 	// +kubebuilder:validation:Required
-	// OrderRef represents the owner reference of the
-	OrderRef metav1.OwnerReference `json:"orderRef"`
-
-	// +kubebuilder:validation:Required
 	// Price represents the price of the payment in cents.
 	Price int64 `json:"price"`
 }
 
 // PaymentStatus defines the observed state of Payment.
 type PaymentStatus struct {
+	LastGeneration   int64       `json:"lastGeneration,omitempty"`
 	ErrorMessage     string      `json:"errorMessage,omitempty"`
 	ErrorTimestamp   metav1.Time `json:"errorTimestamp,omitempty"`
 	PaymentTimestamp metav1.Time `json:"paymentTimestamp,omitempty"`
@@ -40,10 +37,8 @@ type PaymentStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Owner",type="string",JSONPath=".spec.ownerRef.name"
-// +kubebuilder:printcolumn:name="Price",type="string",JSONPath=".spec.price"
-// +kubebuilder:printcolumn:name="PaymentTime",type="string",JSONPath=".status.paymentTimestamp"
-// +kubebuilder:selectablefield:JSONPath=".spec.ownerRef.name"
+// +kubebuilder:printcolumn:name="Price",type="number",JSONPath=".spec.price"
+// +kubebuilder:printcolumn:name="Date",type="date",JSONPath=".status.paymentTimestamp"
 
 // Payment is the Schema for the payments API.
 type Payment struct {
