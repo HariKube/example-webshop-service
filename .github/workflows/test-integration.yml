@@ -1,0 +1,110 @@
+name: Integration Tests
+
+on:
+  push:
+    branches-ignore:
+    - release-v**
+    - rc-v**
+    - beta-v**
+    - alpha-v**
+    - dev-v**
+
+  pull_request:
+    branches: [main]
+
+concurrency: 
+  group: ${{ github.ref_name }}-test-e2e
+  cancel-in-progress: true
+
+jobs:
+  prepare-test:
+    strategy:
+      matrix:
+        kubeVersion: [ v1.34.0 ]
+    name: Prepare Test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone the code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Extract Kind version
+      run: |
+        grep "KIND_VERSION?=" Makefile | cut -d'=' -f2 | awk '{print "kindVersion="$NF}'  >> $GITHUB_OUTPUT
+      id: kind_version
+    
+    - uses: actions/cache/restore@v4
+      id: kind-cache
+      with:
+        path: bin/kind
+        key: ${{ runner.os }}-${{ steps.kind_version.outputs.kindVersion }}
+    
+    - name: Download kind
+      if: steps.kind-cache.outputs.cache-hit != 'true'
+      run: |
+          mkdir -p bin
+          curl -Lo bin/kind https://kind.sigs.k8s.io/dl/${{ steps.kind_version.outputs.kindVersion }}/kind-linux-amd64
+          chmod +x bin/kind
+    
+    - uses: actions/cache/save@v4
+      if: steps.kind-cache.outputs.cache-hit != 'true'
+      with:
+        path: bin/kind
+        key: ${{ steps.kind-cache.outputs.cache-primary-key }}
+    
+    - uses: actions/cache/restore@v4
+      id: kubectl-cache
+      with:
+        path: bin/kubectl
+        key: ${{ runner.os }}-${{ matrix.kubeVersion }}
+    
+    - name: Download kubectl
+      if: steps.kubectl-cache.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p bin
+        curl -Lo bin/kubectl "https://dl.k8s.io/release/${{ matrix.kubeVersion }}/bin/linux/amd64/kubectl"
+        chmod +x bin/kubectl
+    
+    - uses: actions/cache/save@v4
+      if: steps.kubectl-cache.outputs.cache-hit != 'true'
+      with:
+        path: bin/kubectl
+        key: ${{ steps.kubectl-cache.outputs.cache-primary-key }}
+  test-e2e:
+    strategy:
+      matrix:
+        kubeVersion: [ v1.34.0 ]
+    needs: [ prepare-test ]
+    name: Run on Ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      
+      - name: Extract Kind version
+        run: |
+          grep "KIND_VERSION?=" Makefile | cut -d'=' -f2 | awk '{print "kindVersion="$NF}'  >> $GITHUB_OUTPUT
+        id: kind_version
+      
+      - uses: actions/cache/restore@v4
+        id: kind-cache
+        with:
+          path: bin/kind
+          key: ${{ runner.os }}-${{ steps.kind_version.outputs.kindVersion }}
+      
+      - uses: actions/cache/restore@v4
+        id: kubectl-cache
+        with:
+          path: bin/kubectl
+          key: ${{ runner.os }}-${{ matrix.kubeVersion }}
+      
+      - name: Running Test Integration
+        run: make package test-integration
