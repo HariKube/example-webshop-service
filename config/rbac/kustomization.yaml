@@ -18,3 +18,41 @@ resources:
 - metrics_auth_role.yaml
 - metrics_auth_role_binding.yaml
 - metrics_reader_role.yaml
+# For each CRD, "Admin", "Editor" and "Viewer" roles are scaffolded by
+# default, aiding admins in cluster management. Those roles are
+# not used by the example-webshop-service itself. You can comment the following lines
+# if you do not want those helpers be installed with your Project.
+- licence_admin_role.yaml
+- licence_editor_role.yaml
+- licence_viewer_role.yaml
+- payment_admin_role.yaml
+- payment_editor_role.yaml
+- payment_viewer_role.yaml
+- tenant_admin_role.yaml
+- tenant_editor_role.yaml
+- tenant_viewer_role.yaml
+- user_admin_role.yaml
+- user_editor_role.yaml
+- user_viewer_role.yaml
+- registrytoken_admin_role.yaml
+- registrytoken_editor_role.yaml
+- registrytoken_viewer_role.yaml
+- emailtemplate_admin_role.yaml
+- emailtemplate_editor_role.yaml
+- emailtemplate_viewer_role.yaml
+- email_admin_role.yaml
+- email_editor_role.yaml
+- email_viewer_role.yaml
+- order_admin_role.yaml
+- order_editor_role.yaml
+- order_viewer_role.yaml
+- product_admin_role.yaml
+- product_editor_role.yaml
+- product_viewer_role.yaml
+- addon_admin_role.yaml
+- addon_editor_role.yaml
+- addon_viewer_role.yaml
+- coupon_admin_role.yaml
+- coupon_editor_role.yaml
+- coupon_viewer_role.yaml
+

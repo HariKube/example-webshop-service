@@ -8,4 +8,116 @@ layout:
 - go.kubebuilder.io/v4
 projectName: example-webshop-service
 repo: github.com/HariKube/example-webshop-service
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: webshop.harikube.info
+  group: product
+  kind: Coupon
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: webshop.harikube.info
+  group: product
+  kind: Addon
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: webshop.harikube.info
+  group: product
+  kind: Product
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: webshop.harikube.info
+  group: product
+  kind: Order
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: webshop.harikube.info
+  group: product
+  kind: Email
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: webshop.harikube.info
+  group: product
+  kind: EmailTemplate
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: webshop.harikube.info
+  group: product
+  kind: RegistryToken
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: webshop.harikube.info
+  group: product
+  kind: User
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: webshop.harikube.info
+  group: product
+  kind: Tenant
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: webshop.harikube.info
+  group: product
+  kind: Payment
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: webshop.harikube.info
+  group: product
+  kind: Licence
+  path: github.com/HariKube/example-webshop-service/api/v1
+  version: v1
 version: "3"
