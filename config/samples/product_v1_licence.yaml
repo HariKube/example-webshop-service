@@ -1,0 +1,9 @@
+apiVersion: product.webshop.harikube.info/v1
+kind: Licence
+metadata:
+  labels:
+    app.kubernetes.io/name: example-webshop-service
+    app.kubernetes.io/managed-by: kustomize
+  name: licence-sample
+spec:
+  # TODO(user): Add fields here

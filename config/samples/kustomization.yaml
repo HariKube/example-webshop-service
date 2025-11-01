@@ -1,0 +1,14 @@
+## Append samples of your project ##
+resources:
+- product_v1_coupon.yaml
+- product_v1_addon.yaml
+- product_v1_product.yaml
+- product_v1_order.yaml
+- product_v1_email.yaml
+- product_v1_emailtemplate.yaml
+- product_v1_registrytoken.yaml
+- product_v1_user.yaml
+- product_v1_tenant.yaml
+- product_v1_payment.yaml
+- product_v1_licence.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

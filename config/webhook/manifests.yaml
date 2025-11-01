@@ -1,0 +1,172 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-product-webshop-harikube-info-v1-order
+  failurePolicy: Fail
+  name: morder-v1.kb.io
+  rules:
+  - apiGroups:
+    - product.webshop.harikube.info
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - orders
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-product-webshop-harikube-info-v1-product
+  failurePolicy: Fail
+  name: mproduct-v1.kb.io
+  rules:
+  - apiGroups:
+    - product.webshop.harikube.info
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - products
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-product-webshop-harikube-info-v1-tenant
+  failurePolicy: Fail
+  name: mtenant-v1.kb.io
+  rules:
+  - apiGroups:
+    - product.webshop.harikube.info
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - tenants
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-product-webshop-harikube-info-v1-user
+  failurePolicy: Fail
+  name: muser-v1.kb.io
+  rules:
+  - apiGroups:
+    - product.webshop.harikube.info
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - users
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-product-webshop-harikube-info-v1-order
+  failurePolicy: Fail
+  name: vorder-v1.kb.io
+  rules:
+  - apiGroups:
+    - product.webshop.harikube.info
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - orders
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-product-webshop-harikube-info-v1-product
+  failurePolicy: Fail
+  name: vproduct-v1.kb.io
+  rules:
+  - apiGroups:
+    - product.webshop.harikube.info
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - products
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-product-webshop-harikube-info-v1-tenant
+  failurePolicy: Fail
+  name: vtenant-v1.kb.io
+  rules:
+  - apiGroups:
+    - product.webshop.harikube.info
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - tenants
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-product-webshop-harikube-info-v1-user
+  failurePolicy: Fail
+  name: vuser-v1.kb.io
+  rules:
+  - apiGroups:
+    - product.webshop.harikube.info
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - users
+  sideEffects: None

@@ -1,0 +1,9 @@
+apiVersion: product.webshop.harikube.info/v1
+kind: Coupon
+metadata:
+  labels:
+    app.kubernetes.io/name: example-webshop-service
+    app.kubernetes.io/managed-by: kustomize
+  name: coupon-sample
+spec:
+  # TODO(user): Add fields here

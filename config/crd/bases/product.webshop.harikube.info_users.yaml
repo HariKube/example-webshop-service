@@ -1,0 +1,176 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: users.product.webshop.harikube.info
+spec:
+  group: product.webshop.harikube.info
+  names:
+    kind: User
+    listKind: UserList
+    plural: users
+    singular: user
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.firstName
+      name: FirstName
+      type: string
+    - jsonPath: .spec.lastName
+      name: LastName
+      type: string
+    - jsonPath: .spec.email
+      name: Email
+      type: string
+    - jsonPath: .spec.companyName
+      name: Company
+      type: string
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: User is the Schema for the users API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: UserSpec defines the desired state of User.
+            properties:
+              address:
+                description: Address represents the address of the user.
+                maxLength: 512
+                minLength: 1
+                type: string
+              city:
+                description: City represents the city of the user.
+                maxLength: 50
+                minLength: 1
+                type: string
+              companyName:
+                description: CompanyName represents the company name of the user.
+                maxLength: 256
+                minLength: 1
+                type: string
+              country:
+                description: Country represents the country of the user.
+                maxLength: 3
+                minLength: 1
+                type: string
+              email:
+                description: Email represents the email address of the user.
+                format: email
+                maxLength: 256
+                minLength: 5
+                pattern: ^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$
+                type: string
+              firstName:
+                description: |-
+                  FirstName represents the first name of the user.
+                  Allow basic Unicode letters, spaces, apostrophes, and hyphens.
+                maxLength: 128
+                minLength: 1
+                pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
+                type: string
+              lastName:
+                description: LastName represents the last name of the user.
+                maxLength: 128
+                minLength: 1
+                pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
+                type: string
+              phoneNumber:
+                description: PhoneNumber represents the phone number of the user.
+                maxLength: 15
+                minLength: 7
+                pattern: ^\+?[1-9]\d{1,14}$
+                type: string
+              postalCode:
+                description: PostalCode represents the postal code of the user.
+                maxLength: 30
+                minLength: 1
+                type: string
+              taxNumber:
+                description: TaxNumber represents the tax number of the user.
+                maxLength: 256
+                minLength: 1
+                type: string
+              tenants:
+                description: Tenants represents the list of tenants associated with
+                  the user.
+                items:
+                  description: |-
+                    LocalObjectReference contains enough information to let you locate the
+                    referenced object inside the same namespace.
+                  properties:
+                    name:
+                      default: ""
+                      description: |-
+                        Name of the referent.
+                        This field is effectively required, but due to backwards compatibility is
+                        allowed to be empty. Instances of this type with an empty value here are
+                        almost certainly wrong.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+            required:
+            - address
+            - city
+            - country
+            - email
+            - firstName
+            - lastName
+            - postalCode
+            type: object
+          status:
+            description: UserStatus defines the observed state of User.
+            properties:
+              passwordRef:
+                description: |-
+                  LocalObjectReference contains enough information to let you locate the
+                  referenced object inside the same namespace.
+                properties:
+                  name:
+                    default: ""
+                    description: |-
+                      Name of the referent.
+                      This field is effectively required, but due to backwards compatibility is
+                      allowed to be empty. Instances of this type with an empty value here are
+                      almost certainly wrong.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              phase:
+                default: Pending
+                enum:
+                - Pending
+                - Validated
+                type: string
+            type: object
+        type: object
+    selectableFields:
+    - jsonPath: .spec.email
+    served: true
+    storage: true
+    subresources:
+      status: {}

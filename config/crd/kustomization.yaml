@@ -1,0 +1,26 @@
+# This kustomization.yaml is not intended to be run by itself,
+# since it depends on service name and namespace that are out of this kustomize package.
+# It should be run by config/default
+resources:
+- bases/product.webshop.harikube.info_coupons.yaml
+- bases/product.webshop.harikube.info_addons.yaml
+- bases/product.webshop.harikube.info_products.yaml
+- bases/product.webshop.harikube.info_orders.yaml
+- bases/product.webshop.harikube.info_emails.yaml
+- bases/product.webshop.harikube.info_emailtemplates.yaml
+- bases/product.webshop.harikube.info_registrytokens.yaml
+- bases/product.webshop.harikube.info_users.yaml
+- bases/product.webshop.harikube.info_tenants.yaml
+- bases/product.webshop.harikube.info_payments.yaml
+- bases/product.webshop.harikube.info_licences.yaml
+# +kubebuilder:scaffold:crdkustomizeresource
+
+patches:
+# [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
+# patches here are for enabling the conversion webhook for each CRD
+# +kubebuilder:scaffold:crdkustomizewebhookpatch
+
+# [WEBHOOK] To enable webhook, uncomment the following section
+# the following config is for teaching kustomize how to do kustomization for CRDs.
+configurations:
+- kustomizeconfig.yaml
