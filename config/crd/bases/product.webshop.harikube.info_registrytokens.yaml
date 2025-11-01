@@ -243,6 +243,8 @@ spec:
                         - Pending
                         - Validated
                         type: string
+                      validatedEmail:
+                        type: string
                     type: object
                 type: object
             required:

@@ -99,6 +99,8 @@ type UserStatus struct {
 	// +kubebuilder:default=Pending
 	Phase string `json:"phase,omitempty"`
 
+	ValidatedEmail string `json:"validatedEmail,omitempty"`
+
 	PasswordRef *corev1.LocalObjectReference `json:"passwordRef,omitempty"`
 }
 

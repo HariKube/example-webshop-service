@@ -29,7 +29,6 @@ import (
 	productv1 "github.com/HariKube/example-webshop-service/api/v1"
 )
 
-// nolint:unused
 // log is for logging in this package.
 var tenantlog = logf.Log.WithName("tenant-resource")
 
