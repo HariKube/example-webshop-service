@@ -12,11 +12,11 @@ spec:
     listKind: TenantList
     plural: tenants
     singular: tenant
-  scope: Cluster
+  scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.displayName
-      name: DisplayName
+    - jsonPath: .spec.companyName
+      name: Company
       type: string
     name: v1
     schema:
@@ -43,16 +43,53 @@ spec:
           spec:
             description: TenantSpec defines the desired state of Tenant.
             properties:
-              description:
-                description: Description represents a brief description of the addon.
+              address:
+                description: Address represents the address of the user.
+                maxLength: 512
+                minLength: 1
                 type: string
-              displayName:
-                description: DisplayName represents the human friendly name of the
-                  addon.
+              city:
+                description: City represents the city of the user.
+                maxLength: 50
+                minLength: 1
                 type: string
-              userRefs:
-                description: Users represents the associated users information.
+              companyName:
+                description: CompanyName represents the company name of the user.
+                maxLength: 250
+                minLength: 1
+                type: string
+              country:
+                description: Country represents the country of the user.
+                maxLength: 3
+                minLength: 1
+                type: string
+              postalCode:
+                description: PostalCode represents the postal code of the user.
+                maxLength: 30
+                minLength: 1
+                type: string
+              taxNumber:
+                description: TaxNumber represents the tax number of the user.
+                maxLength: 256
+                minLength: 1
+                type: string
+            required:
+            - address
+            - city
+            - country
+            - postalCode
+            type: object
+          status:
+            description: TenantStatus defines the observed state of Tenant.
+            properties:
+              lastGeneration:
+                format: int64
+                type: integer
+              tenantRefs:
                 items:
+                  description: |-
+                    LocalObjectReference contains enough information to let you locate the
+                    referenced object inside the same namespace.
                   properties:
                     name:
                       default: ""
@@ -63,29 +100,16 @@ spec:
                         almost certainly wrong.
                         More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
                       type: string
-                    namespace:
-                      description: Namespace represents the namespace of the referenced
-                        object.
-                      type: string
-                  required:
-                  - namespace
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array
-            required:
-            - displayName
-            - userRefs
-            type: object
-          status:
-            description: TenantStatus defines the observed state of Tenant.
-            properties:
-              lastGeneration:
-                format: int64
-                type: integer
             type: object
         type: object
     selectableFields:
-    - jsonPath: .spec.displayName
+    - jsonPath: .spec.companyName
+    - jsonPath: .spec.country
+    - jsonPath: .spec.city
+    - jsonPath: .spec.taxNumber
     served: true
     storage: true
     subresources:

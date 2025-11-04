@@ -17,37 +17,61 @@ limitations under the License.
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // TenantSpec defines the desired state of Tenant.
 type TenantSpec struct {
+	// +kubebuilder:validation:Optional
+	// CompanyName represents the company name of the user.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=250
+	CompanyName string `json:"companyName,omitempty"`
+
 	// +kubebuilder:validation:Required
-	// DisplayName represents the human friendly name of the addon.
-	DisplayName string `json:"displayName"`
+	// Country represents the country of the user.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=3
+	Country string `json:"country"`
+
+	// +kubebuilder:validation:Required
+	// City represents the city of the user.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=50
+	City string `json:"city"`
+
+	// Address represents the address of the user.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=512
+	Address string `json:"address"`
+
+	// +kubebuilder:validation:Required
+	// PostalCode represents the postal code of the user.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=30
+	PostalCode string `json:"postalCode"`
 
 	// +kubebuilder:validation:Optional
-	// Description represents a brief description of the addon.
-	Description string `json:"description,omitempty"`
-
-	// +kubebuilder:validation:Required
-	// Users represents the associated users information.
-	UserRefs []RemoteObjectReference `json:"userRefs"`
+	// TaxNumber represents the tax number of the user.
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=256
+	TaxNumber string `json:"taxNumber,omitempty"`
 }
 
 // TenantStatus defines the observed state of Tenant.
 type TenantStatus struct {
-	LastGeneration int64 `json:"lastGeneration,omitempty"`
+	LastGeneration int64                         `json:"lastGeneration,omitempty"`
+	TenantRefs     []corev1.LocalObjectReference `json:"tenantRefs,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster
-// +kubebuilder:printcolumn:name="DisplayName",type="string",JSONPath=".spec.displayName"
-// +kubebuilder:selectablefield:JSONPath=".spec.displayName"
+// +kubebuilder:printcolumn:name="Company",type=string,JSONPath=`.spec.companyName`
+// +kubebuilder:selectablefield:JSONPath=".spec.companyName"
+// +kubebuilder:selectablefield:JSONPath=".spec.country"
+// +kubebuilder:selectablefield:JSONPath=".spec.city"
+// +kubebuilder:selectablefield:JSONPath=".spec.taxNumber"
 
 // Tenant is the Schema for the tenants API.
 type Tenant struct {

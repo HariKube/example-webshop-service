@@ -55,26 +55,6 @@ spec:
               billingUser:
                 description: BillingUser represents the billing user information.
                 properties:
-                  address:
-                    description: Address represents the address of the user.
-                    maxLength: 512
-                    minLength: 1
-                    type: string
-                  city:
-                    description: City represents the city of the user.
-                    maxLength: 50
-                    minLength: 1
-                    type: string
-                  companyName:
-                    description: CompanyName represents the company name of the user.
-                    maxLength: 256
-                    minLength: 1
-                    type: string
-                  country:
-                    description: Country represents the country of the user.
-                    maxLength: 3
-                    minLength: 1
-                    type: string
                   email:
                     description: Email represents the email address of the user.
                     format: email
@@ -86,13 +66,13 @@ spec:
                     description: |-
                       FirstName represents the first name of the user.
                       Allow basic Unicode letters, spaces, apostrophes, and hyphens.
-                    maxLength: 128
+                    maxLength: 125
                     minLength: 1
                     pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
                     type: string
                   lastName:
                     description: LastName represents the last name of the user.
-                    maxLength: 128
+                    maxLength: 125
                     minLength: 1
                     pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
                     type: string
@@ -102,24 +82,10 @@ spec:
                     minLength: 7
                     pattern: ^\+?[1-9]\d{1,14}$
                     type: string
-                  postalCode:
-                    description: PostalCode represents the postal code of the user.
-                    maxLength: 30
-                    minLength: 1
-                    type: string
-                  taxNumber:
-                    description: TaxNumber represents the tax number of the user.
-                    maxLength: 256
-                    minLength: 1
-                    type: string
                 required:
-                - address
-                - city
-                - country
                 - email
                 - firstName
                 - lastName
-                - postalCode
                 type: object
               couponCode:
                 description: Coupon represents an optional coupon for the order.
@@ -383,26 +349,6 @@ spec:
               user:
                 description: User represents the order user information.
                 properties:
-                  address:
-                    description: Address represents the address of the user.
-                    maxLength: 512
-                    minLength: 1
-                    type: string
-                  city:
-                    description: City represents the city of the user.
-                    maxLength: 50
-                    minLength: 1
-                    type: string
-                  companyName:
-                    description: CompanyName represents the company name of the user.
-                    maxLength: 256
-                    minLength: 1
-                    type: string
-                  country:
-                    description: Country represents the country of the user.
-                    maxLength: 3
-                    minLength: 1
-                    type: string
                   email:
                     description: Email represents the email address of the user.
                     format: email
@@ -414,13 +360,13 @@ spec:
                     description: |-
                       FirstName represents the first name of the user.
                       Allow basic Unicode letters, spaces, apostrophes, and hyphens.
-                    maxLength: 128
+                    maxLength: 125
                     minLength: 1
                     pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
                     type: string
                   lastName:
                     description: LastName represents the last name of the user.
-                    maxLength: 128
+                    maxLength: 125
                     minLength: 1
                     pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
                     type: string
@@ -430,24 +376,10 @@ spec:
                     minLength: 7
                     pattern: ^\+?[1-9]\d{1,14}$
                     type: string
-                  postalCode:
-                    description: PostalCode represents the postal code of the user.
-                    maxLength: 30
-                    minLength: 1
-                    type: string
-                  taxNumber:
-                    description: TaxNumber represents the tax number of the user.
-                    maxLength: 256
-                    minLength: 1
-                    type: string
                 required:
-                - address
-                - city
-                - country
                 - email
                 - firstName
                 - lastName
-                - postalCode
                 type: object
             required:
             - orderTimestamp

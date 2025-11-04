@@ -7,7 +7,11 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - namespaces
+  - rolebindings
+  - roles
   - secrets
+  - serviceaccounts
   verbs:
   - create
   - delete
@@ -15,7 +19,6 @@ rules:
   - list
   - patch
   - update
-  - watch
 - apiGroups:
   - product.webshop.harikube.info
   resources:
@@ -23,6 +26,7 @@ rules:
   - licences
   - orders
   - payments
+  - registrationrequests
   - registrytokens
   - tenants
   - users
@@ -41,6 +45,7 @@ rules:
   - licences/finalizers
   - orders/finalizers
   - payments/finalizers
+  - registrationrequests/finalizers
   - registrytokens/finalizers
   - tenants/finalizers
   - users/finalizers
@@ -53,6 +58,7 @@ rules:
   - licences/status
   - orders/status
   - payments/status
+  - registrationrequests/status
   - registrytokens/status
   - tenants/status
   - users/status

@@ -115,10 +115,10 @@ var _ = BeforeSuite(func() {
 	err = SetupProductWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = SetupTenantWebhookWithManager(mgr)
+	err = SetupUserWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = SetupUserWebhookWithManager(mgr)
+	err = SetupRegistrationRequestWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:webhook

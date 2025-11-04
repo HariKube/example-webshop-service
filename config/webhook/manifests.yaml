@@ -50,6 +50,25 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-product-webshop-harikube-info-v1-registrationrequest
+  failurePolicy: Fail
+  name: mregistrationrequest-v1.kb.io
+  rules:
+  - apiGroups:
+    - product.webshop.harikube.info
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - registrationrequests
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-product-webshop-harikube-info-v1-tenant
   failurePolicy: Fail
   name: mtenant-v1.kb.io
@@ -83,7 +102,6 @@ webhooks:
     - UPDATE
     resources:
     - users
-    - users/status
   sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
@@ -138,6 +156,25 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-product-webshop-harikube-info-v1-registrationrequest
+  failurePolicy: Fail
+  name: vregistrationrequest-v1.kb.io
+  rules:
+  - apiGroups:
+    - product.webshop.harikube.info
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - registrationrequests
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-product-webshop-harikube-info-v1-tenant
   failurePolicy: Fail
   name: vtenant-v1.kb.io
@@ -149,7 +186,6 @@ webhooks:
     operations:
     - CREATE
     - UPDATE
-    - DELETE
     resources:
     - tenants
   sideEffects: None

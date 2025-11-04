@@ -1,0 +1,18 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: prometheus
+spec:
+  namespace: default
+  skipDelete: true
+  steps:
+  - name: Deploy prometheus CRDs
+    try:
+    - apply:
+        file: https://github.com/prometheus-operator/prometheus-operator/releases/download/v0.77.1/stripped-down-crds.yaml
+    - assert:
+        resource:
+          apiVersion: apiextensions.k8s.io/v1
+          kind: CustomResourceDefinition
+          metadata:
+            name: servicemonitors.monitoring.coreos.com

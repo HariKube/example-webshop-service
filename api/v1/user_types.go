@@ -24,21 +24,17 @@ import (
 // UserSpec defines the desired state of User.
 type UserSpec struct {
 	// +kubebuilder:validation:Required
-	// PasswordRef references the Secret containing the user's password.
-	PasswordRef *corev1.LocalObjectReference `json:"passwordRef"`
-
-	// +kubebuilder:validation:Required
 	// FirstName represents the first name of the user.
 	// Allow basic Unicode letters, spaces, apostrophes, and hyphens.
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=128
+	// +kubebuilder:validation:MaxLength=125
 	// +kubebuilder:validation:Pattern=`^[\p{L}][\p{L}\p{M}\s'\-]*$`
 	FirstName string `json:"firstName"`
 
 	// +kubebuilder:validation:Required
 	// LastName represents the last name of the user.
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=128
+	// +kubebuilder:validation:MaxLength=125
 	// +kubebuilder:validation:Pattern=`^[\p{L}][\p{L}\p{M}\s'\-]*$`
 	LastName string `json:"lastName"`
 
@@ -49,41 +45,6 @@ type UserSpec struct {
 	// +kubebuilder:validation:MaxLength=256
 	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
 	Email string `json:"email"`
-
-	// +kubebuilder:validation:Optional
-	// CompanyName represents the company name of the user.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=256
-	CompanyName string `json:"companyName,omitempty"`
-
-	// +kubebuilder:validation:Required
-	// Country represents the country of the user.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=3
-	Country string `json:"country"`
-
-	// +kubebuilder:validation:Required
-	// City represents the city of the user.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=50
-	City string `json:"city"`
-
-	// Address represents the address of the user.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=512
-	Address string `json:"address"`
-
-	// +kubebuilder:validation:Required
-	// PostalCode represents the postal code of the user.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=30
-	PostalCode string `json:"postalCode"`
-
-	// +kubebuilder:validation:Optional
-	// TaxNumber represents the tax number of the user.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:MaxLength=256
-	TaxNumber string `json:"taxNumber,omitempty"`
 
 	// +kubebuilder:validation:Optional
 	// PhoneNumber represents the phone number of the user.
@@ -98,8 +59,8 @@ type UserStatus struct {
 	LastGeneration int64 `json:"lastGeneration,omitempty"`
 	// +kubebuilder:validation:Enum=Pending;Validated
 	// +kubebuilder:default=Pending
-	Phase      string                        `json:"phase,omitempty"`
-	TenantRefs []corev1.LocalObjectReference `json:"tenantRefs,omitempty"`
+	Phase       string                       `json:"phase,omitempty"`
+	PasswordRef *corev1.LocalObjectReference `json:"passwordRef"`
 }
 
 // +kubebuilder:object:root=true
@@ -107,8 +68,9 @@ type UserStatus struct {
 // +kubebuilder:printcolumn:name="FirstName",type=string,JSONPath=`.spec.firstName`
 // +kubebuilder:printcolumn:name="LastName",type=string,JSONPath=`.spec.lastName`
 // +kubebuilder:printcolumn:name="Email",type=string,JSONPath=`.spec.email`
-// +kubebuilder:printcolumn:name="Company",type=string,JSONPath=`.spec.companyName`
 // +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
+// +kubebuilder:selectablefield:JSONPath=".spec.firstName"
+// +kubebuilder:selectablefield:JSONPath=".spec.lastName"
 // +kubebuilder:selectablefield:JSONPath=".spec.email"
 
 // User is the Schema for the users API.

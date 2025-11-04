@@ -22,6 +22,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -50,13 +51,12 @@ func SetupTenantWebhookWithManager(mgr ctrl.Manager) error {
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as it is used only for temporary operations and does not need to be deeply copied.
 type TenantCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
 }
 
 var _ webhook.CustomDefaulter = &TenantCustomDefaulter{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind Tenant.
-func (d *TenantCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
+func (d *TenantCustomDefaulter) Default(ctx context.Context, obj runtime.Object) error {
 	tenant, ok := obj.(*productv1.Tenant)
 
 	if !ok {
@@ -64,7 +64,10 @@ func (d *TenantCustomDefaulter) Default(_ context.Context, obj runtime.Object) e
 	}
 	tenantlog.Info("Defaulting for Tenant", "name", tenant.GetName())
 
-	// TODO(user): fill in your defaulting logic.
+	if !controllerutil.ContainsFinalizer(tenant, "product.webshop.harikube.info/tenant") {
+		controllerutil.AddFinalizer(tenant, "product.webshop.harikube.info/tenant")
+		tenantlog.Info("Added finalizer for Tenant", "name", tenant.GetName())
+	}
 
 	return nil
 }
@@ -72,7 +75,7 @@ func (d *TenantCustomDefaulter) Default(_ context.Context, obj runtime.Object) e
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 // NOTE: The 'path' attribute must follow a specific pattern and should not be modified directly here.
 // Modifying the path for an invalid path can cause API server errors; failing to locate the webhook.
-// +kubebuilder:webhook:path=/validate-product-webshop-harikube-info-v1-tenant,mutating=false,failurePolicy=fail,sideEffects=None,groups=product.webshop.harikube.info,resources=tenants,verbs=create;update;delete,versions=v1,name=vtenant-v1.kb.io,admissionReviewVersions=v1
+// +kubebuilder:webhook:path=/validate-product-webshop-harikube-info-v1-tenant,mutating=false,failurePolicy=fail,sideEffects=None,groups=product.webshop.harikube.info,resources=tenants,verbs=create;update,versions=v1,name=vtenant-v1.kb.io,admissionReviewVersions=v1
 
 // TenantCustomValidator struct is responsible for validating the Tenant resource
 // when it is created, updated, or deleted.
@@ -80,20 +83,23 @@ func (d *TenantCustomDefaulter) Default(_ context.Context, obj runtime.Object) e
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as this struct is used only for temporary operations and does not need to be deeply copied.
 type TenantCustomValidator struct {
-	// TODO(user): Add more fields as needed for validation
 }
 
 var _ webhook.CustomValidator = &TenantCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type Tenant.
-func (v *TenantCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (v *TenantCustomValidator) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
 	tenant, ok := obj.(*productv1.Tenant)
 	if !ok {
 		return nil, fmt.Errorf("expected a Tenant object but got %T", obj)
 	}
-	tenantlog.Info("Validation for Tenant upon creation", "name", tenant.GetName())
+	tenantlog.Info("Validation for Tenant upon create", "name", tenant.GetName())
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if len(tenant.OwnerReferences) == 0 {
+		return nil, fmt.Errorf("tenant %s must have an owner reference", tenant.GetName())
+	} else if tenant.OwnerReferences[0].Kind != "Namespace" {
+		return nil, fmt.Errorf("tenant %s must be owned by a Namespace", tenant.GetName())
+	}
 
 	return nil, nil
 }

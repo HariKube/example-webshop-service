@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,6 +38,8 @@ type TenantReconciler struct {
 // +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=tenants/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=tenants/finalizers,verbs=update
 
+// +kubebuilder:rbac:groups="",resources=namespaces,verbs=create;get;list;update;patch;delete
+
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
@@ -47,9 +50,42 @@ type TenantReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.21.0/pkg/reconcile
 func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+	logger := logf.FromContext(ctx).WithValues("controller", "tenant", "name", req.NamespacedName)
 
-	// TODO(user): your logic here
+	tenant := productv1.Tenant{}
+	if err := r.Get(ctx, req.NamespacedName, &tenant); err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+
+		logger.Error(err, "Tenant fetch failed")
+		return ctrl.Result{}, err
+	}
+
+	if tenant.DeletionTimestamp != nil || !tenant.DeletionTimestamp.IsZero() {
+		logger.Info("Tenant deleted")
+
+		return ctrl.Result{}, nil
+	} else if tenant.Generation == 1 && tenant.Status.LastGeneration == 0 {
+		logger.Info("Tenant created")
+
+		patchedTenant := tenant.DeepCopy()
+		patchedTenant.Status.LastGeneration = tenant.Generation
+		if err := r.Status().Patch(ctx, patchedTenant, client.MergeFrom(&tenant)); err != nil {
+			if apierrors.IsNotFound(err) {
+				return ctrl.Result{}, nil
+			}
+
+			logger.Error(err, "Tenant status update failed")
+			return ctrl.Result{}, err
+		}
+	} else {
+		if tenant.Status.LastGeneration == tenant.Generation {
+			return ctrl.Result{}, nil
+		}
+
+		logger.Info("User updated")
+	}
 
 	return ctrl.Result{}, nil
 }

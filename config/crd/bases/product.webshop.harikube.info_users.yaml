@@ -24,9 +24,6 @@ spec:
     - jsonPath: .spec.email
       name: Email
       type: string
-    - jsonPath: .spec.companyName
-      name: Company
-      type: string
     - jsonPath: .status.phase
       name: Phase
       type: string
@@ -55,26 +52,6 @@ spec:
           spec:
             description: UserSpec defines the desired state of User.
             properties:
-              address:
-                description: Address represents the address of the user.
-                maxLength: 512
-                minLength: 1
-                type: string
-              city:
-                description: City represents the city of the user.
-                maxLength: 50
-                minLength: 1
-                type: string
-              companyName:
-                description: CompanyName represents the company name of the user.
-                maxLength: 256
-                minLength: 1
-                type: string
-              country:
-                description: Country represents the country of the user.
-                maxLength: 3
-                minLength: 1
-                type: string
               email:
                 description: Email represents the email address of the user.
                 format: email
@@ -86,13 +63,13 @@ spec:
                 description: |-
                   FirstName represents the first name of the user.
                   Allow basic Unicode letters, spaces, apostrophes, and hyphens.
-                maxLength: 128
+                maxLength: 125
                 minLength: 1
                 pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
                 type: string
               lastName:
                 description: LastName represents the last name of the user.
-                maxLength: 128
+                maxLength: 125
                 minLength: 1
                 pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
                 type: string
@@ -102,24 +79,10 @@ spec:
                 minLength: 7
                 pattern: ^\+?[1-9]\d{1,14}$
                 type: string
-              postalCode:
-                description: PostalCode represents the postal code of the user.
-                maxLength: 30
-                minLength: 1
-                type: string
-              taxNumber:
-                description: TaxNumber represents the tax number of the user.
-                maxLength: 256
-                minLength: 1
-                type: string
             required:
-            - address
-            - city
-            - country
             - email
             - firstName
             - lastName
-            - postalCode
             type: object
           status:
             description: UserStatus defines the observed state of User.
@@ -149,27 +112,13 @@ spec:
                 - Pending
                 - Validated
                 type: string
-              tenantRefs:
-                items:
-                  description: |-
-                    LocalObjectReference contains enough information to let you locate the
-                    referenced object inside the same namespace.
-                  properties:
-                    name:
-                      default: ""
-                      description: |-
-                        Name of the referent.
-                        This field is effectively required, but due to backwards compatibility is
-                        allowed to be empty. Instances of this type with an empty value here are
-                        almost certainly wrong.
-                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      type: string
-                  type: object
-                  x-kubernetes-map-type: atomic
-                type: array
+            required:
+            - passwordRef
             type: object
         type: object
     selectableFields:
+    - jsonPath: .spec.firstName
+    - jsonPath: .spec.lastName
     - jsonPath: .spec.email
     served: true
     storage: true

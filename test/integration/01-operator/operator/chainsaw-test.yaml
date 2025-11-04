@@ -1,0 +1,62 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: operator
+spec:
+  timeouts:
+    exec: 5m
+  namespace: default
+  skipDelete: true
+  steps:
+  - name: Build operator
+    try:
+    - script:
+        content: make -C ../../../.. package docker-build docker-load
+        env:
+        - name: IMG
+          value: harikube/example-webshop-service:snapshot
+  - name: Deploy operator
+    try:
+    - apply:
+        file: ../../../../package/bundle.yaml
+    - assert:
+        resource:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: example-webshop-service-controller-manager
+            namespace: example-webshop-service-system
+          status:
+            readyReplicas: 1
+    - assert:
+        resource:
+          apiVersion: v1
+          kind: Endpoints
+          metadata:
+            name: example-webshop-service-webhook-service
+            namespace: example-webshop-service-system
+          ~.(subsets):
+            (length(addresses) > `0`): true
+    - assert:
+        resource:
+          apiVersion: v1
+          kind: Endpoints
+          metadata:
+            name: example-webshop-service-api-service-service
+            namespace: example-webshop-service-system
+          ~.(subsets):
+            (length(addresses) > `0`): true
+    - assert:
+        resource:
+          apiVersion: apiregistration.k8s.io/v1
+          kind: APIService
+          metadata:
+            name: v1.api.product.webshop.harikube.info
+            annotations:
+              cert-manager.io/inject-ca-from: example-webshop-service-system/example-webshop-service-api-serving-cert
+          status:
+            conditions:
+            - message: all checks passed
+              reason: Passed
+              status: "True"
+              type: Available

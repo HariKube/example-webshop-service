@@ -1,0 +1,31 @@
+# This patch ensures the api-service certificates are properly mounted in the manager container.
+# It configures the necessary arguments, volumes, volume mounts, and container ports.
+
+# Add the --api-service-cert-path argument for configuring the api-service certificate path
+- op: add
+  path: /spec/template/spec/containers/0/args/-
+  value: --api-service-cert-path=/tmp/k8s-api-service-server/api-serving-cert
+
+# Add the volumeMount for the api-service certificates
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/-
+  value:
+    mountPath: /tmp/k8s-api-service-server/api-serving-cert
+    name: api-service-certs
+    readOnly: true
+
+# Add the port configuration for the api-service server
+- op: add
+  path: /spec/template/spec/containers/0/ports/-
+  value:
+    containerPort: 7443
+    name: api-service
+    protocol: TCP
+
+# Add the volume configuration for the api-service certificates
+- op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: api-service-certs
+    secret:
+      secretName: api-service-server-cert
