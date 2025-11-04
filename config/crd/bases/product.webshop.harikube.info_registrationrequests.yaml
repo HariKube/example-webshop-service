@@ -42,7 +42,6 @@ spec:
             properties:
               password:
                 description: Password represents the password for the user.
-                maxLength: 64
                 minLength: 8
                 type: string
               tenant:

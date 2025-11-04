@@ -42,7 +42,8 @@ type UserReconciler struct {
 // +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=users/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=users/finalizers,verbs=update
 
-// +kubebuilder:rbac:groups="",resources=secrets;roles;rolebindings;serviceaccounts,verbs=create;get;list;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=secrets;serviceaccounts,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=roles;rolebindings,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -195,6 +196,68 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		}
 	} else {
 		logger.Info("ServiceAccount has been created", "serviceAccountName", serviceAccount.Name)
+	}
+
+	if hash, ok := user.Annotations["product.webshop.harikube.info/password"]; ok {
+		password := corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      user.Name,
+				Namespace: user.Namespace,
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: user.APIVersion,
+						Kind:       user.Kind,
+						Name:       user.Name,
+						UID:        user.UID,
+					},
+				},
+			},
+			StringData: map[string]string{
+				"hash": hash,
+			},
+		}
+		if err := r.Create(ctx, &password); err != nil {
+			if !apierrors.IsAlreadyExists(err) {
+				logger.Error(err, "Secret creation failed")
+				return ctrl.Result{}, err
+			}
+
+			if err := r.Get(ctx, types.NamespacedName{
+				Name:      password.Name,
+				Namespace: password.Namespace,
+			}, &password); err != nil {
+				logger.Error(err, "Secret fetch failed")
+				return ctrl.Result{}, err
+			}
+
+			password.StringData = map[string]string{
+				"hash": hash,
+			}
+			if err := r.Update(ctx, &password); err != nil {
+				logger.Error(err, "Secret update failed")
+				return ctrl.Result{}, err
+			}
+
+			logger.Info("Secret has been updated", "secretName", password.Name)
+		} else {
+			logger.Info("Secret has been created", "secretName", password.Name)
+		}
+
+		delete(user.Annotations, "product.webshop.harikube.info/password")
+		user.Status.PasswordRef = &corev1.LocalObjectReference{
+			Name: password.Name,
+		}
+	}
+
+	patchedUser := user.DeepCopy()
+	patchedUser.Status.LastGeneration = user.Generation
+	if err := r.Status().Patch(ctx, patchedUser, client.MergeFrom(&user)); err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+
+		logger.Error(err, "User status update failed")
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil

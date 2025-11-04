@@ -20,11 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -71,56 +67,7 @@ func (d *UserCustomDefaulter) Default(ctx context.Context, obj runtime.Object) e
 	}
 	userlog.Info("Defaulting for User", "name", user.GetName())
 
-	if hash, ok := user.Annotations["product.webshop.harikube.info/password"]; ok {
-		password := corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      user.Name,
-				Namespace: user.Name,
-				OwnerReferences: []metav1.OwnerReference{
-					{
-						APIVersion: user.APIVersion,
-						Kind:       user.Kind,
-						Name:       user.Name,
-						UID:        user.UID,
-					},
-				},
-			},
-			StringData: map[string]string{
-				"hash": hash,
-			},
-		}
-		if err := d.Create(ctx, &password); err != nil {
-			if !apierrors.IsAlreadyExists(err) {
-				userlog.Error(err, "Secret creation failed")
-				return err
-			}
-
-			if err := d.Get(ctx, types.NamespacedName{
-				Name:      password.Name,
-				Namespace: password.Namespace,
-			}, &password); err != nil {
-				userlog.Error(err, "Secret fetch failed")
-				return err
-			}
-
-			password.StringData = map[string]string{
-				"hash": hash,
-			}
-			if err := d.Update(ctx, &password); err != nil {
-				userlog.Error(err, "Secret update failed")
-				return err
-			}
-
-			userlog.Info("Secret has been updated", "secretName", password.Name)
-		} else {
-			userlog.Info("Secret has been created", "secretName", password.Name)
-		}
-
-		delete(user.Annotations, "product.webshop.harikube.info/password")
-		user.Status.PasswordRef = &corev1.LocalObjectReference{
-			Name: password.Name,
-		}
-	}
+	// TODO(user): fill in your defaulting logic.
 
 	return nil
 }

@@ -95,7 +95,7 @@ _test-integration:
 	$(CHAINSAW) test --test-dir test/integration/00-dependencies
 	$(CHAINSAW) test --test-dir test/integration/01-operator
 	$(CHAINSAW) test --test-dir test/integration/02-user
-	$(MAKE) cleanup-test-integration
+# 	$(MAKE) cleanup-test-integration
 
 .PHONY: cleanup-test-integration
 cleanup-test-integration: ## Tear down the Kind cluster used for integration tests

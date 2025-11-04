@@ -27,7 +27,6 @@ type RegistrationRequestSpec struct {
 	User UserSpec `json:"user"`
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=8
-	// +kubebuilder:validation:MaxLength=64
 	// Password represents the password for the user.
 	Password string `json:"password"`
 	// +kubebuilder:validation:Required

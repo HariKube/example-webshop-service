@@ -145,8 +145,6 @@ spec:
                         - Pending
                         - Validated
                         type: string
-                    required:
-                    - passwordRef
                     type: object
                 type: object
             required:

@@ -56,13 +56,16 @@ type RegistrationRequestCustomDefaulter struct {
 
 var _ webhook.CustomDefaulter = &RegistrationRequestCustomDefaulter{}
 
-var defaultParams = &argon2id.Params{
-	Memory:      64 * 1024,
-	Iterations:  3,
-	Parallelism: 2,
-	SaltLength:  16,
-	KeyLength:   32,
-}
+var (
+	passwordMatcher      = regexp2.MustCompile(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,64}$`, 0)
+	hashingDefaultParams = &argon2id.Params{
+		Memory:      64 * 1024,
+		Iterations:  3,
+		Parallelism: 2,
+		SaltLength:  16,
+		KeyLength:   32,
+	}
+)
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind RegistrationRequest.
 func (d *RegistrationRequestCustomDefaulter) Default(ctx context.Context, obj runtime.Object) error {
@@ -73,7 +76,11 @@ func (d *RegistrationRequestCustomDefaulter) Default(ctx context.Context, obj ru
 	}
 	registrationrequestlog.Info("Defaulting for RegistrationRequest", "name", registrationrequest.GetName())
 
-	hash, err := argon2id.CreateHash(registrationrequest.Spec.Password, defaultParams)
+	if ok, _ := passwordMatcher.MatchString(registrationrequest.Spec.Password); !ok {
+		return fmt.Errorf("password must include upper, lower, number, special and be 8-64 chars")
+	}
+
+	hash, err := argon2id.CreateHash(registrationrequest.Spec.Password, hashingDefaultParams)
 	if err != nil {
 		return fmt.Errorf("error hashing password: %w", err)
 	}
@@ -102,8 +109,6 @@ type RegistrationRequestCustomValidator struct {
 
 var _ webhook.CustomValidator = &RegistrationRequestCustomValidator{}
 
-var re = regexp2.MustCompile(`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,64}$`, 0)
-
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type RegistrationRequest.
 func (v *RegistrationRequestCustomValidator) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
 	registrationrequest, ok := obj.(*productv1.RegistrationRequest)
@@ -112,9 +117,7 @@ func (v *RegistrationRequestCustomValidator) ValidateCreate(ctx context.Context,
 	}
 	registrationrequestlog.Info("Validation for RegistrationRequest upon create", "name", registrationrequest.GetName())
 
-	if ok, _ := re.MatchString(registrationrequest.Spec.Password); !ok {
-		return nil, fmt.Errorf("password must include upper, lower, number, special and be 8-64 chars")
-	}
+	// TODO(user): fill in your validation logic upon object create.
 
 	return nil, nil
 }

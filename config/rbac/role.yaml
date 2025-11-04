@@ -8,8 +8,6 @@ rules:
   - ""
   resources:
   - namespaces
-  - rolebindings
-  - roles
   - secrets
   - serviceaccounts
   verbs:
@@ -19,6 +17,7 @@ rules:
   - list
   - patch
   - update
+  - watch
 - apiGroups:
   - product.webshop.harikube.info
   resources:
@@ -66,3 +65,16 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  - roles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

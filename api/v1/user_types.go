@@ -60,7 +60,7 @@ type UserStatus struct {
 	// +kubebuilder:validation:Enum=Pending;Validated
 	// +kubebuilder:default=Pending
 	Phase       string                       `json:"phase,omitempty"`
-	PasswordRef *corev1.LocalObjectReference `json:"passwordRef"`
+	PasswordRef *corev1.LocalObjectReference `json:"passwordRef,omitempty"`
 }
 
 // +kubebuilder:object:root=true
