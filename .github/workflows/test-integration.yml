@@ -31,7 +31,7 @@ jobs:
     
     - name: Extract Kind version
       run: |
-        grep "KIND_VERSION?=" Makefile | cut -d'=' -f2 | awk '{print "kindVersion="$NF}'  >> $GITHUB_OUTPUT
+        grep "KIND_VERSION ?= " Makefile | cut -d'=' -f2 | awk '{print "kindVersion="$NF}'  >> $GITHUB_OUTPUT
       id: kind_version
     
     - uses: actions/cache/restore@v4
