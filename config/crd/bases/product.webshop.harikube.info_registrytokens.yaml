@@ -64,88 +64,37 @@ spec:
               user:
                 description: User represents the associated user information.
                 properties:
-                  apiVersion:
-                    description: |-
-                      APIVersion defines the versioned schema of this representation of an object.
-                      Servers should convert recognized schemas to the latest internal value, and
-                      may reject unrecognized values.
-                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+                  email:
+                    description: Email represents the email address of the user.
+                    format: email
+                    maxLength: 256
+                    minLength: 5
+                    pattern: ^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$
                     type: string
-                  kind:
+                  firstName:
                     description: |-
-                      Kind is a string value representing the REST resource this object represents.
-                      Servers may infer this from the endpoint the client submits requests to.
-                      Cannot be updated.
-                      In CamelCase.
-                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                      FirstName represents the first name of the user.
+                      Allow basic Unicode letters, spaces, apostrophes, and hyphens.
+                    maxLength: 125
+                    minLength: 1
+                    pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
                     type: string
-                  metadata:
-                    type: object
-                  spec:
-                    description: UserSpec defines the desired state of User.
-                    properties:
-                      email:
-                        description: Email represents the email address of the user.
-                        format: email
-                        maxLength: 256
-                        minLength: 5
-                        pattern: ^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$
-                        type: string
-                      firstName:
-                        description: |-
-                          FirstName represents the first name of the user.
-                          Allow basic Unicode letters, spaces, apostrophes, and hyphens.
-                        maxLength: 125
-                        minLength: 1
-                        pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
-                        type: string
-                      lastName:
-                        description: LastName represents the last name of the user.
-                        maxLength: 125
-                        minLength: 1
-                        pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
-                        type: string
-                      phoneNumber:
-                        description: PhoneNumber represents the phone number of the
-                          user.
-                        maxLength: 15
-                        minLength: 7
-                        pattern: ^\+?[1-9]\d{1,14}$
-                        type: string
-                    required:
-                    - email
-                    - firstName
-                    - lastName
-                    type: object
-                  status:
-                    description: UserStatus defines the observed state of User.
-                    properties:
-                      lastGeneration:
-                        format: int64
-                        type: integer
-                      passwordRef:
-                        description: |-
-                          LocalObjectReference contains enough information to let you locate the
-                          referenced object inside the same namespace.
-                        properties:
-                          name:
-                            default: ""
-                            description: |-
-                              Name of the referent.
-                              This field is effectively required, but due to backwards compatibility is
-                              allowed to be empty. Instances of this type with an empty value here are
-                              almost certainly wrong.
-                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                            type: string
-                        type: object
-                        x-kubernetes-map-type: atomic
-                      phase:
-                        default: Pending
-                        enum:
-                        - Pending
-                        - Validated
-                        type: string
-                    type: object
+                  lastName:
+                    description: LastName represents the last name of the user.
+                    maxLength: 125
+                    minLength: 1
+                    pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
+                    type: string
+                  phoneNumber:
+                    description: PhoneNumber represents the phone number of the user.
+                    maxLength: 15
+                    minLength: 7
+                    pattern: ^\+?[1-9]\d{1,14}$
+                    type: string
+                required:
+                - email
+                - firstName
+                - lastName
                 type: object
             required:
             - displayName

@@ -573,7 +573,11 @@ func (in *OrderProduct) DeepCopy() *OrderProduct {
 func (in *OrderSpec) DeepCopyInto(out *OrderSpec) {
 	*out = *in
 	in.User.DeepCopyInto(&out.User)
-	in.BillingUser.DeepCopyInto(&out.BillingUser)
+	if in.BillingUser != nil {
+		in, out := &in.BillingUser, &out.BillingUser
+		*out = new(UserSpec)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Products != nil {
 		in, out := &in.Products, &out.Products
 		*out = make([]OrderProduct, len(*in))
@@ -581,7 +585,11 @@ func (in *OrderSpec) DeepCopyInto(out *OrderSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	in.Coupon.DeepCopyInto(&out.Coupon)
+	if in.Coupon != nil {
+		in, out := &in.Coupon, &out.Coupon
+		*out = new(Coupon)
+		(*in).DeepCopyInto(*out)
+	}
 	in.OrderTimestamp.DeepCopyInto(&out.OrderTimestamp)
 }
 

@@ -31,9 +31,9 @@ type LicenceSpec struct {
 	// Description represents a brief description of the licence.
 	Description string `json:"description,omitempty"`
 
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// Addons represents the list of addons associated with this licence.
-	Addons []Addon `json:"addons"`
+	Addons []Addon `json:"addons,omitempty"`
 
 	// +kubebuilder:validation:Required
 	// ExpireTimestamp represents the expiration date of the licence.

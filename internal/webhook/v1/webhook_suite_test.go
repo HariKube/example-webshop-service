@@ -118,6 +118,9 @@ var _ = BeforeSuite(func() {
 	err = SetupUserWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = SetupTenantWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
 	err = SetupRegistrationRequestWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 

@@ -51,7 +51,11 @@ var _ = Describe("User Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: productv1.UserSpec{
+						FirstName: "First",
+						LastName:  "Last",
+						Email:     "email@harikube.info",
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}

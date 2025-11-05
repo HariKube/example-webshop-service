@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: harikube/example-webshop-service
-  newTag: snapshot-2-dirty
+  newTag: snapshot-3-dirty

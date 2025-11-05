@@ -46,6 +46,7 @@ type ProductStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
 // +kubebuilder:printcolumn:name="DisplayName",type="string",JSONPath=".spec.displayName"
 // +kubebuilder:printcolumn:name="Price",type="number",JSONPath=".spec.price"
 // +kubebuilder:selectablefield:JSONPath=".spec.displayName"

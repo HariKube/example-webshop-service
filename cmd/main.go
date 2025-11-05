@@ -24,6 +24,7 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"k8s.io/client-go/dynamic"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,6 +33,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/certwatcher"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
@@ -185,6 +187,8 @@ func main() {
 		})
 	}
 
+	ctx := ctrl.SetupSignalHandler()
+
 	options := ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsServerOptions,
@@ -206,9 +210,23 @@ func main() {
 		Cache: cache.Options{},
 	}
 
+	dynamicKubeClient, err := dynamic.NewForConfig(ctrl.GetConfigOrDie())
+	if err != nil {
+		setupLog.Error(err, "unable to create dynamic kube client")
+		os.Exit(1)
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(ctx, &productv1.User{}, "spec.email", func(rawObj client.Object) []string {
+		user := rawObj.(*productv1.User)
+		return []string{user.Spec.Email}
+	}); err != nil {
+		setupLog.Error(err, "unable to serup indexer")
 		os.Exit(1)
 	}
 
@@ -217,6 +235,13 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Order")
+		os.Exit(1)
+	}
+	if err := (&controller.ProductReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Product")
 		os.Exit(1)
 	}
 	if err := (&controller.EmailReconciler{
@@ -321,7 +346,7 @@ func main() {
 		}
 	}
 
-	if err := mgr.Add(apiservicev1.New(mgr.GetClient(), mgr.GetScheme(), ":7443", apiServiceCertPath, apiServiceCertName, apiServiceCertKey)); err != nil {
+	if err := mgr.Add(apiservicev1.New(dynamicKubeClient, mgr.GetScheme(), ":7443", apiServiceCertPath, apiServiceCertName, apiServiceCertKey)); err != nil {
 		setupLog.Error(err, "unable to add API service to manager")
 		os.Exit(1)
 	}
@@ -336,7 +361,7 @@ func main() {
 	}
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}

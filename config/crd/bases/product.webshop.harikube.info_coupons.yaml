@@ -12,7 +12,7 @@ spec:
     listKind: CouponList
     plural: coupons
     singular: coupon
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.displayName

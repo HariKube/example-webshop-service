@@ -12,7 +12,7 @@ spec:
     listKind: ProductList
     plural: products
     singular: product
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.displayName

@@ -41,6 +41,7 @@ type TenantSpec struct {
 	// +kubebuilder:validation:MaxLength=50
 	City string `json:"city"`
 
+	// +kubebuilder:validation:Required
 	// Address represents the address of the user.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=512
@@ -67,6 +68,7 @@ type TenantStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
 // +kubebuilder:printcolumn:name="Company",type=string,JSONPath=`.spec.companyName`
 // +kubebuilder:selectablefield:JSONPath=".spec.companyName"
 // +kubebuilder:selectablefield:JSONPath=".spec.country"

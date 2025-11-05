@@ -40,6 +40,7 @@ type RegistrationRequestStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
 
 // RegistrationRequest is the Schema for the registrationrequests API.
 type RegistrationRequest struct {

@@ -21,7 +21,8 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/errors"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -40,20 +41,47 @@ var _ = Describe("RegistrationRequest Controller", func() {
 			Name:      resourceName,
 			Namespace: "default", // TODO(user):Modify as needed
 		}
-		registrytoken := &productv1.RegistrationRequest{}
+		registrationrequest := &productv1.RegistrationRequest{}
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind RegistrationRequest")
-			err := k8sClient.Get(ctx, typeNamespacedName, registrytoken)
-			if err != nil && errors.IsNotFound(err) {
-				resource := &productv1.RegistrationRequest{
+			err := k8sClient.Get(ctx, typeNamespacedName, registrationrequest)
+			if err != nil && apierrors.IsNotFound(err) {
+				registrationrequest = &productv1.RegistrationRequest{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: productv1.RegistrationRequestSpec{
+						User: productv1.UserSpec{
+							FirstName: "First",
+							LastName:  "Last",
+							Email:     "email@harikube.info",
+						},
+						Password: "Passwd123!",
+						Tenant: productv1.TenantSpec{
+							Country:    "HU",
+							City:       "Budapest",
+							Address:    "Address 123",
+							PostalCode: "1234",
+						},
+					},
 				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+				Expect(k8sClient.Create(ctx, registrationrequest)).To(Succeed())
+			}
+
+			namespace := &corev1.Namespace{}
+
+			err = k8sClient.Get(ctx, types.NamespacedName{
+				Name: string(registrationrequest.UID),
+			}, namespace)
+			if err != nil && apierrors.IsNotFound(err) {
+				namespace = &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: string(registrationrequest.UID),
+					},
+				}
+				Expect(k8sClient.Create(ctx, namespace)).To(Succeed())
 			}
 		})
 
@@ -61,10 +89,7 @@ var _ = Describe("RegistrationRequest Controller", func() {
 			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &productv1.RegistrationRequest{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Cleanup the specific resource instance RegistrationRequest")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")

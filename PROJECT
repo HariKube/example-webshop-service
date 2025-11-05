@@ -28,6 +28,7 @@ resources:
 - api:
     crdVersion: v1
     namespaced: true
+  controller: true
   domain: webshop.harikube.info
   group: product
   kind: Product

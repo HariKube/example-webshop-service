@@ -51,7 +51,13 @@ var _ = Describe("Email Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: productv1.EmailSpec{
+						ToAddress:   "to@harikube.info",
+						FromName:    "From Name",
+						FromAddress: "from@harikube.info",
+						Subject:     "Test Subject",
+						Body:        "Test Body",
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}

@@ -51,6 +51,7 @@ type CouponStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
 // +kubebuilder:printcolumn:name="DisplayName",type="string",JSONPath=".spec.displayName"
 // +kubebuilder:printcolumn:name="Value",type="integer",JSONPath=".spec.value"
 // +kubebuilder:printcolumn:name="Type",type="string",JSONPath=".spec.couponType"

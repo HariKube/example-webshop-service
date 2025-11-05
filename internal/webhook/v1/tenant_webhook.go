@@ -95,11 +95,7 @@ func (v *TenantCustomValidator) ValidateCreate(ctx context.Context, obj runtime.
 	}
 	tenantlog.Info("Validation for Tenant upon create", "name", tenant.GetName())
 
-	if len(tenant.OwnerReferences) == 0 {
-		return nil, fmt.Errorf("tenant %s must have an owner reference", tenant.GetName())
-	} else if tenant.OwnerReferences[0].Kind != "Namespace" {
-		return nil, fmt.Errorf("tenant %s must be owned by a Namespace", tenant.GetName())
-	}
+	// TODO(user): fill in your validation logic upon object create.
 
 	return nil, nil
 }

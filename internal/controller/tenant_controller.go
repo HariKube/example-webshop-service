@@ -19,10 +19,15 @@ package controller
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	productv1 "github.com/HariKube/example-webshop-service/api/v1"
@@ -61,23 +66,72 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		logger.Error(err, "Tenant fetch failed")
 		return ctrl.Result{}, err
 	}
+	tenant.GetObjectKind().SetGroupVersionKind(productv1.GroupVersion.WithKind("Tenant"))
 
 	if tenant.DeletionTimestamp != nil || !tenant.DeletionTimestamp.IsZero() {
 		logger.Info("Tenant deleted")
+
+		namespace := corev1.Namespace{}
+		if err := r.Get(ctx, types.NamespacedName{
+			Name: string(tenant.UID),
+		}, &namespace); err != nil {
+			if !apierrors.IsNotFound(err) {
+				logger.Error(err, "Namespace fetch failed", "namespaceName", namespace.Name)
+				return ctrl.Result{}, err
+			}
+		}
+		if controllerutil.ContainsFinalizer(&namespace, "product.webshop.harikube.info/tenant") {
+			controllerutil.RemoveFinalizer(&namespace, "product.webshop.harikube.info/tenant")
+			if err := r.Update(ctx, &namespace); err != nil {
+				if apierrors.IsNotFound(err) {
+					return ctrl.Result{}, nil
+				}
+
+				logger.Error(err, "Tenant finalizer removal failed", "namespaceName", namespace.Name)
+				return ctrl.Result{}, err
+			}
+		}
+
+		if controllerutil.ContainsFinalizer(&tenant, "product.webshop.harikube.info/tenant") {
+			controllerutil.RemoveFinalizer(&tenant, "product.webshop.harikube.info/tenant")
+			if err := r.Update(ctx, &tenant); err != nil {
+				if apierrors.IsNotFound(err) {
+					return ctrl.Result{}, nil
+				}
+
+				logger.Error(err, "Tenant finalizer removal failed")
+				return ctrl.Result{}, err
+			}
+		}
 
 		return ctrl.Result{}, nil
 	} else if tenant.Generation == 1 && tenant.Status.LastGeneration == 0 {
 		logger.Info("Tenant created")
 
-		patchedTenant := tenant.DeepCopy()
-		patchedTenant.Status.LastGeneration = tenant.Generation
-		if err := r.Status().Patch(ctx, patchedTenant, client.MergeFrom(&tenant)); err != nil {
-			if apierrors.IsNotFound(err) {
-				return ctrl.Result{}, nil
+		namespace := corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: tenant.Name,
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion:         tenant.APIVersion,
+						Kind:               tenant.Kind,
+						Name:               tenant.Name,
+						UID:                tenant.UID,
+						BlockOwnerDeletion: ptr.To(true),
+					},
+				},
+				Finalizers: []string{
+					"product.webshop.harikube.info/tenant",
+				},
+			},
+		}
+		if err := r.Create(ctx, &namespace); err != nil {
+			if !apierrors.IsAlreadyExists(err) {
+				logger.Error(err, "Namespace creation failed")
+				return ctrl.Result{}, err
 			}
-
-			logger.Error(err, "Tenant status update failed")
-			return ctrl.Result{}, err
+		} else {
+			logger.Info("Namespace has been created", "namespaceName", namespace.Name)
 		}
 	} else {
 		if tenant.Status.LastGeneration == tenant.Generation {
@@ -85,6 +139,17 @@ func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		}
 
 		logger.Info("User updated")
+	}
+
+	patchedTenant := tenant.DeepCopy()
+	patchedTenant.Status.LastGeneration = tenant.Generation
+	if err := r.Status().Patch(ctx, patchedTenant, client.MergeFrom(&tenant)); err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+
+		logger.Error(err, "Tenant status update failed")
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil

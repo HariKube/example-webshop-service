@@ -29,7 +29,7 @@ type OrderSpec struct {
 
 	// +kubebuilder:validation:Optional
 	// BillingUser represents the billing user information.
-	BillingUser UserSpec `json:"billingUser,omitempty"`
+	BillingUser *UserSpec `json:"billingUser,omitempty"`
 
 	// +kubebuilder:validation:Required
 	// Products represents the list of products within this order.
@@ -37,7 +37,7 @@ type OrderSpec struct {
 
 	// +kubebuilder:validation:Optional
 	// Coupon represents an optional coupon for the order.
-	Coupon Coupon `json:"couponCode,omitempty"`
+	Coupon *Coupon `json:"couponCode,omitempty"`
 
 	// +kubebuilder:validation:Required
 	// OrderTimestamp represents the date when the order was placed.
@@ -48,7 +48,7 @@ type OrderSpec struct {
 type OrderProduct struct {
 	// +kubebuilder:validation:Required
 	// Product represents the product.
-	Product Product `json:"product"`
+	Product ProductSpec `json:"product"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default:=1

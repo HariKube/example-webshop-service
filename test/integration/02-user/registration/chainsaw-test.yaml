@@ -3,6 +3,7 @@ kind: Test
 metadata:
   name: regisration
 spec:
+  skipDelete: true
   steps:
   - name: Create RegistrationRequest
     try:
@@ -26,148 +27,177 @@ spec:
               address: 123 Main St, Apt 4B
               postalCode: '10001'
               taxNumber: ABC-123456789
-    #     outputs:
-    #     - name: request
-    #       match:
-    #         apiVersion: product.webshop.harikube.info/v1
-    #         kind: RegistrationRequest
-    #         name: tech-innovators-inc
-    #       value: (@)
-    #     - name: user
-    #       match:
-    #         apiVersion: product.webshop.harikube.info/v1
-    #         kind: User
-    #         name: tech-innovators-inc
-    #         namespace: ($request.metadata.uid)
-    #       value: (@)
-    # - assert:
-    #     resource:
-    #       apiVersion: v1
-    #       kind: Namespace
-    #       metadata:
-    #         name: ($request.metadata.uid)
-    # - assert:
-    #     resource:
-    #       apiVersion: product.webshop.harikube.info/v1
-    #       kind: Tenant
-    #       metadata:
-    #         name: tech-innovators-inc
-    #         ownerReferences:
-    #         - apiVersion: v1
-    #           kind: Namespace
-    #           name: tech-innovators-inc
-    #           blockOwnerDeletion: true
-    #         finalizers:
-    #         - product.webshop.harikube.info/tenant
-    #       spec:
-    #         companyName: Tech Innovators Inc. 
-    #         country: USA
-    #         city: New York
-    #         address: 123 Main St, Apt 4B
-    #         postalCode: '10001'
-    #         taxNumber: ABC-123456789
-    # - assert:
-    #     resource:
-    #       apiVersion: product.webshop.harikube.info/v1
-    #       kind: User
-    #       metadata:
-    #         name: tech-innovators-inc
-    #       spec:
-    #         firstName: John
-    #         lastName: D'oe-Smith
-    #         email: john.doe@example.com
-    #         phoneNumber: '+15551234567'
-    #       status:
-    #         passwordRef:
-    #           name: tech-innovators-inc
-    # - assert:
-    #     resource:
-    #       apiVersion: v1
-    #       kind: Secret
-    #       metadata:
-    #         name: tech-innovators-inc
-    #         ownerReferences:
-    #         - apiVersion: product.webshop.harikube.info/v1
-    #           kind: User
-    #           name: tech-innovators-inc
-    #       stringData:
-    #         passwordHash: 12345
-    # - assert:
-    #     resource:
-    #       apiVersion: rbac.authorization.k8s.io
-    #       kind: Role
-    #       metadata:
-    #         name: ($user.metadata.uid)
-    #         ownerReferences:
-    #         - apiVersion: product.webshop.harikube.info/v1
-    #           kind: User
-    #           name: tech-innovators-inc
-    #       rules:
-    #       - apiGroups:
-    #         - product.webshop.harikube.info
-    #         resources:
-    #         - orders
-    #         verbs:
-    #         - get
-    #         - list
-    #         - watch
-    #       - apiGroups:
-    #         - product.webshop.harikube.info
-    #         resources:
-    #         - registrytokens
-    #         verbs:
-    #         - get
-    #         - list
-    #         - watch
-    #         - create
-    #         - delete
-    #       - apiGroups:
-    #         - product.webshop.harikube.info
-    #         resources:
-    #         - tenants
-    #         verbs:
-    #         - get
-    #         - list
-    #         - watch
-    #         - update
-    #         - patch
-    #       - apiGroups:
-    #         - product.webshop.harikube.info
-    #         resources:
-    #         - users
-    #         resourceNames:
-    #         - ($user.metadata.uid)
-    #         verbs:
-    #         - get
-    #         - list
-    #         - watch
-    #         - update
-    #         - patch
-    # - assert:
-    #     resource:
-    #       apiVersion: rbac.authorization.k8s.io
-    #       kind: RoleBinding
-    #       metadata:
-    #         name: ($user.metadata.uid)
-    #         ownerReferences:
-    #         - apiVersion: product.webshop.harikube.info/v1
-    #           kind: User
-    #           name: tech-innovators-inc
-    #       subjects:
-    #       - kind: ServiceAccount
-    #         name: ($user.metadata.uid)
-    #         namespace: ($request.metadata.uid)
-    #       roleRef:
-    #         apiGroup: rbac.authorization.k8s.io
-    #         kind: Role
-    #         name: ($user.metadata.uid)
-    # - assert:
-    #     resource:
-    #       apiVersion: v1
-    #       kind: ServiceAccount
-    #       metadata:
-    #         name: ($user.metadata.uid)
-    #         ownerReferences:
-    #         - apiVersion: product.webshop.harikube.info/v1
-    #           kind: User
-    #           name: tech-innovators-inc
+    - sleep:
+        duration: 5s
+    - script:
+        content: "kubectl get users.product.webshop.harikube.info -A --field-selector='spec.email=john.doe@example.com' -o=json"
+        outputs:
+        - name: users
+          value: (json_parse($stdout))
+    - assert:
+        resource:
+          apiVersion: product.webshop.harikube.info/v1
+          kind: Tenant
+          metadata:
+            name: ($users.items[0].metadata.namespace)
+            finalizers:
+            - product.webshop.harikube.info/tenant
+          spec:
+            companyName: Tech Innovators Inc. 
+            country: USA
+            city: New York
+            address: 123 Main St, Apt 4B
+            postalCode: '10001'
+            taxNumber: ABC-123456789
+    - assert:
+        resource:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: ($users.items[0].metadata.namespace)
+            ownerReferences:
+            - apiVersion: product.webshop.harikube.info/v1
+              kind: Tenant
+              name: ($users.items[0].metadata.namespace)
+              blockOwnerDeletion: true
+            finalizers:
+            - product.webshop.harikube.info/tenant
+    - assert:
+        resource:
+          apiVersion: product.webshop.harikube.info/v1
+          kind: User
+          metadata:
+            name: ($users.items[0].metadata.name)
+            namespace: ($users.items[0].metadata.namespace)
+          spec:
+            firstName: John
+            lastName: D'oe-Smith
+            email: john.doe@example.com
+            phoneNumber: '+15551234567'
+          status:
+            passwordRef:
+              name: ($users.items[0].metadata.uid)
+    - assert:
+        resource:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: ($users.items[0].metadata.uid)
+            namespace: ($users.items[0].metadata.namespace)
+            ownerReferences:
+            - apiVersion: product.webshop.harikube.info/v1
+              kind: User
+              name: ($users.items[0].metadata.name)
+    - assert:
+        resource:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: Role
+          metadata:
+            name: ($users.items[0].metadata.uid)
+            namespace: ($users.items[0].metadata.namespace)
+            ownerReferences:
+            - apiVersion: product.webshop.harikube.info/v1
+              kind: User
+              name: ($users.items[0].metadata.name)
+          # rules:
+          # - apiGroups:
+          #   - product.webshop.harikube.info
+          #   resources:
+          #   - registrytokens
+          #   verbs:
+          #   - get
+          #   - list
+          #   - watch
+          #   - create
+          #   - delete
+          # - apiGroups:
+          #   - product.webshop.harikube.info
+          #   resources:
+          #   - orders
+          #   verbs:
+          #   - get
+          #   - list
+          #   - watch
+          # - apiGroups:
+          #   - product.webshop.harikube.info
+          #   resourceNames:
+          #   - ($users.items[0].metadata.name)
+          #   resources:
+          #   - users
+          #   verbs:
+          #   - get
+          #   - list
+          #   - watch
+          #   - update
+          #   - patch
+    - assert:
+        resource:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRole
+          metadata:
+            name: ($users.items[0].metadata.uid)
+            ownerReferences:
+            - apiVersion: product.webshop.harikube.info/v1
+              kind: User
+              name: ($users.items[0].metadata.name)
+          # rules:
+          # - apiGroups:
+          #   - product.webshop.harikube.info
+          #   resourceNames:
+          #   - ($users.items[0].metadata.namespace)
+          #   resources:
+          #   - tenants
+          #   verbs:
+          #   - get
+          #   - list
+          #   - watch
+          #   - update
+          #   - patch
+    - assert:
+        resource:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: ($users.items[0].metadata.uid)
+            namespace: ($users.items[0].metadata.namespace)
+            ownerReferences:
+            - apiVersion: product.webshop.harikube.info/v1
+              kind: User
+              name: ($users.items[0].metadata.name)
+          subjects:
+          - kind: ServiceAccount
+            name: ($users.items[0].metadata.uid)
+            namespace: ($users.items[0].metadata.namespace)
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: Role
+            name: ($users.items[0].metadata.uid)
+    - assert:
+        resource:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: ($users.items[0].metadata.uid)
+            ownerReferences:
+            - apiVersion: product.webshop.harikube.info/v1
+              kind: User
+              name: ($users.items[0].metadata.name)
+          subjects:
+          - kind: ServiceAccount
+            name: ($users.items[0].metadata.uid)
+            namespace: ($users.items[0].metadata.namespace)
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: ($users.items[0].metadata.uid)
+    - assert:
+        resource:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: ($users.items[0].metadata.uid)
+            namespace: ($users.items[0].metadata.namespace)
+            ownerReferences:
+            - apiVersion: product.webshop.harikube.info/v1
+              kind: User
+              name: ($users.items[0].metadata.name)

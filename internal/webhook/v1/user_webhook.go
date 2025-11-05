@@ -36,7 +36,9 @@ var userlog = logf.Log.WithName("user-resource")
 // SetupUserWebhookWithManager registers the webhook for User in the manager.
 func SetupUserWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).For(&productv1.User{}).
-		WithValidator(&UserCustomValidator{}).
+		WithValidator(&UserCustomValidator{
+			Client: mgr.GetClient(),
+		}).
 		WithDefaulter(&UserCustomDefaulter{
 			Client: mgr.GetClient(),
 		}).
@@ -83,6 +85,7 @@ func (d *UserCustomDefaulter) Default(ctx context.Context, obj runtime.Object) e
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as this struct is used only for temporary operations and does not need to be deeply copied.
 type UserCustomValidator struct {
+	client.Client
 }
 
 var _ webhook.CustomValidator = &UserCustomValidator{}
@@ -95,6 +98,13 @@ func (v *UserCustomValidator) ValidateCreate(ctx context.Context, obj runtime.Ob
 	}
 	userlog.Info("Validation for User upon create", "name", user.GetName())
 
+	existnigUsers := &productv1.UserList{}
+	if err := v.List(ctx, existnigUsers, client.MatchingFields{"spec.email": user.Spec.Email}); err != nil {
+		return nil, fmt.Errorf("failed to list existing users: %w", err)
+	} else if len(existnigUsers.Items) > 0 {
+		return nil, fmt.Errorf("a user with email %s already exists", user.Spec.Email)
+	}
+
 	if len(user.Annotations) == 0 || user.Annotations["product.webshop.harikube.info/password"] == "" {
 		return nil, fmt.Errorf("missing required annotation 'product.webshop.harikube.info/password' for User %s", user.Name)
 	}
@@ -103,12 +113,25 @@ func (v *UserCustomValidator) ValidateCreate(ctx context.Context, obj runtime.Ob
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type User.
-func (v *UserCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+func (v *UserCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
 	user, ok := newObj.(*productv1.User)
 	if !ok {
 		return nil, fmt.Errorf("expected a User object for the newObj but got %T", newObj)
 	}
+	userOld, ok := oldObj.(*productv1.User)
+	if !ok {
+		return nil, fmt.Errorf("expected a User object for the oldObj but got %T", newObj)
+	}
 	userlog.Info("Validation for User upon update", "name", user.GetName())
+
+	if user.Spec.Email != userOld.Spec.Email {
+		existnigUsers := &productv1.UserList{}
+		if err := v.List(ctx, existnigUsers, client.MatchingFields{"spec.email": user.Spec.Email}); err != nil {
+			return nil, fmt.Errorf("failed to list existing users: %w", err)
+		} else if len(existnigUsers.Items) > 0 {
+			return nil, fmt.Errorf("a user with email %s already exists", user.Spec.Email)
+		}
+	}
 
 	if hash, ok := user.Annotations["product.webshop.harikube.info/password"]; ok && hash == "" {
 		return nil, fmt.Errorf("annotation 'product.webshop.harikube.info/password' for User %s cannot be empty", user.Name)

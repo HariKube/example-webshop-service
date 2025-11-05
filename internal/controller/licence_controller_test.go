@@ -51,7 +51,10 @@ var _ = Describe("Licence Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: productv1.LicenceSpec{
+						DisplayName:     resourceName,
+						ExpireTimestamp: metav1.Now(),
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}

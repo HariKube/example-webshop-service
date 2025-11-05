@@ -30,7 +30,7 @@ import (
 	productv1 "github.com/HariKube/example-webshop-service/api/v1"
 )
 
-var _ = Describe("RegistryToken Controller", func() {
+var _ = Describe("Product Controller", func() {
 	Context("When reconciling a resource", func() {
 		const resourceName = "test-resource"
 
@@ -40,25 +40,20 @@ var _ = Describe("RegistryToken Controller", func() {
 			Name:      resourceName,
 			Namespace: "default", // TODO(user):Modify as needed
 		}
-		registrytoken := &productv1.RegistryToken{}
+		product := &productv1.Product{}
 
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind RegistryToken")
-			err := k8sClient.Get(ctx, typeNamespacedName, registrytoken)
+			By("creating the custom resource for the Kind Product")
+			err := k8sClient.Get(ctx, typeNamespacedName, product)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &productv1.RegistryToken{
+				resource := &productv1.Product{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					Spec: productv1.RegistryTokenSpec{
-						DisplayName:     "Test Registry Token",
-						ExpireTimestamp: metav1.Now(),
-						User: productv1.UserSpec{
-							FirstName: "First",
-							LastName:  "Last",
-							Email:     "email@harikube.info",
-						},
+					Spec: productv1.ProductSpec{
+						DisplayName: "Sample Product",
+						Price:       100,
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
@@ -67,16 +62,16 @@ var _ = Describe("RegistryToken Controller", func() {
 
 		AfterEach(func() {
 			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &productv1.RegistryToken{}
+			resource := &productv1.Product{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Cleanup the specific resource instance RegistryToken")
+			By("Cleanup the specific resource instance Product")
 			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
-			controllerReconciler := &RegistryTokenReconciler{
+			controllerReconciler := &ProductReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}

@@ -51,7 +51,23 @@ var _ = Describe("Order Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: productv1.OrderSpec{
+						User: productv1.UserSpec{
+							FirstName: "First",
+							LastName:  "Last",
+							Email:     "email@harikube.info",
+						},
+						Products: []productv1.OrderProduct{
+							{
+								Product: productv1.ProductSpec{
+									DisplayName: "Sample Product",
+									Price:       100,
+								},
+								Quantity: 2,
+							},
+						},
+						OrderTimestamp: metav1.Now(),
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}

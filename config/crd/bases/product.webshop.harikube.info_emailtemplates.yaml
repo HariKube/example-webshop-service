@@ -12,7 +12,7 @@ spec:
     listKind: EmailTemplateList
     plural: emailtemplates
     singular: emailtemplate
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.displayName

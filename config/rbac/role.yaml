@@ -25,6 +25,7 @@ rules:
   - licences
   - orders
   - payments
+  - products
   - registrationrequests
   - registrytokens
   - tenants
@@ -44,6 +45,7 @@ rules:
   - licences/finalizers
   - orders/finalizers
   - payments/finalizers
+  - products/finalizers
   - registrationrequests/finalizers
   - registrytokens/finalizers
   - tenants/finalizers
@@ -57,6 +59,7 @@ rules:
   - licences/status
   - orders/status
   - payments/status
+  - products/status
   - registrationrequests/status
   - registrytokens/status
   - tenants/status
@@ -68,6 +71,8 @@ rules:
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
+  - clusterrolebindings
+  - clusterroles
   - rolebindings
   - roles
   verbs:

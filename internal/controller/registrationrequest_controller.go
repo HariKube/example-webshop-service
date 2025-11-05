@@ -18,13 +18,13 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -71,39 +71,9 @@ func (r *RegistrationRequestReconciler) Reconcile(ctx context.Context, req ctrl.
 		return ctrl.Result{}, nil
 	}
 
-	namespace := corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: string(request.UID),
-		},
-	}
-	if err := r.Create(ctx, &namespace); err != nil {
-		if !apierrors.IsAlreadyExists(err) {
-			logger.Error(err, "Namespace creation failed")
-			return ctrl.Result{}, err
-		}
-	} else {
-		logger.Info("Namespace has been created", "namespaceName", namespace.Name)
-	}
-	if err := r.Get(ctx, types.NamespacedName{
-		Name: namespace.Name,
-	}, &namespace); err != nil {
-		logger.Error(err, "Namespace fetch failed")
-		return ctrl.Result{}, err
-	}
-
 	tenant := productv1.Tenant{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      request.Name,
-			Namespace: namespace.Name,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         namespace.APIVersion,
-					Kind:               namespace.Kind,
-					Name:               namespace.Name,
-					UID:                namespace.UID,
-					BlockOwnerDeletion: ptr.To(true),
-				},
-			},
+			Name: string(request.UID),
 		},
 		Spec: *request.Spec.Tenant.DeepCopy(),
 	}
@@ -116,9 +86,25 @@ func (r *RegistrationRequestReconciler) Reconcile(ctx context.Context, req ctrl.
 		logger.Info("Tenant has been created", "tenantName", tenant.Name)
 	}
 
+	namespace := corev1.Namespace{}
+	if err := r.Get(ctx, types.NamespacedName{
+		Name: string(request.UID),
+	}, &namespace); err != nil {
+		if !apierrors.IsNotFound(err) {
+			logger.Error(err, "Namespace fetch failed")
+			return ctrl.Result{}, err
+		}
+
+		logger.Info("Namespace not found, requeuing until Tenant controller creates it")
+
+		return ctrl.Result{
+			RequeueAfter: time.Second,
+		}, nil
+	}
+
 	user := productv1.User{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      request.Name,
+			Name:      string(request.UID),
 			Namespace: namespace.Name,
 			Annotations: map[string]string{
 				"product.webshop.harikube.info/password": request.Spec.Password,

@@ -36,7 +36,7 @@ type RegistryTokenSpec struct {
 
 	// +kubebuilder:validation:Required
 	// User represents the associated user information.
-	User User `json:"user"`
+	User UserSpec `json:"user"`
 
 	// +kubebuilder:validation:Required
 	// ExpireTimestamp represents the expiration time of the registry token.

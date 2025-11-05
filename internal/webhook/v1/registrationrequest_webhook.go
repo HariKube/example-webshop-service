@@ -22,6 +22,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -37,7 +38,9 @@ var registrationrequestlog = logf.Log.WithName("registrationrequest-resource")
 // SetupRegistrationRequestWebhookWithManager registers the webhook for RegistrationRequest in the manager.
 func SetupRegistrationRequestWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).For(&productv1.RegistrationRequest{}).
-		WithValidator(&RegistrationRequestCustomValidator{}).
+		WithValidator(&RegistrationRequestCustomValidator{
+			Client: mgr.GetClient(),
+		}).
 		WithDefaulter(&RegistrationRequestCustomDefaulter{}).
 		Complete()
 }
@@ -105,6 +108,7 @@ func (d *RegistrationRequestCustomDefaulter) Default(ctx context.Context, obj ru
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as this struct is used only for temporary operations and does not need to be deeply copied.
 type RegistrationRequestCustomValidator struct {
+	client.Client
 }
 
 var _ webhook.CustomValidator = &RegistrationRequestCustomValidator{}
@@ -117,7 +121,12 @@ func (v *RegistrationRequestCustomValidator) ValidateCreate(ctx context.Context,
 	}
 	registrationrequestlog.Info("Validation for RegistrationRequest upon create", "name", registrationrequest.GetName())
 
-	// TODO(user): fill in your validation logic upon object create.
+	existnigUsers := &productv1.UserList{}
+	if err := v.List(ctx, existnigUsers, client.MatchingFields{"spec.email": registrationrequest.Spec.User.Email}); err != nil {
+		return nil, fmt.Errorf("failed to list existing users: %w", err)
+	} else if len(existnigUsers.Items) > 0 {
+		return nil, fmt.Errorf("a user with email %s already exists", registrationrequest.Spec.User.Email)
+	}
 
 	return nil, nil
 }

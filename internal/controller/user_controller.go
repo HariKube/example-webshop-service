@@ -43,7 +43,7 @@ type UserReconciler struct {
 // +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=users/finalizers,verbs=update
 
 // +kubebuilder:rbac:groups="",resources=secrets;serviceaccounts,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=roles;rolebindings,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=roles;clusterroles;rolebindings;clusterrolebindings,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -54,6 +54,7 @@ type UserReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.21.0/pkg/reconcile
+// nolint:gocyclo
 func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := logf.FromContext(ctx).WithValues("controller", "user", "name", req.NamespacedName)
 
@@ -66,26 +67,18 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		logger.Error(err, "User fetch failed")
 		return ctrl.Result{}, err
 	}
+	user.GetObjectKind().SetGroupVersionKind(productv1.GroupVersion.WithKind("User"))
 
 	if user.DeletionTimestamp != nil || !user.DeletionTimestamp.IsZero() {
 		logger.Info("User deleted")
 
 		return ctrl.Result{}, nil
-	} else if user.Generation == 1 && user.Status.LastGeneration == 0 {
-		logger.Info("User created")
-	} else {
-		if user.Status.LastGeneration == user.Generation {
-			return ctrl.Result{}, nil
-		}
-
-		logger.Info("User updated")
 	}
 
 	rules := []authorizationv1.PolicyRule{}
 	for kind, verbs := range map[string][]string{
 		"orders":         {"get", "list", "watch"},
 		"registrytokens": {"get", "list", "watch", "create", "delete"},
-		"tenants":        {"get", "list", "watch", "update", "patch"},
 	} {
 		rules = append(rules, authorizationv1.PolicyRule{
 			APIGroups: []string{"product.webshop.harikube.info"},
@@ -117,7 +110,7 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	}
 	if err := r.Create(ctx, &role); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
-			logger.Error(err, "Role creation failed")
+			logger.Error(err, "Role creation failed", "roleName", role.Name)
 			return ctrl.Result{}, err
 		}
 
@@ -125,13 +118,13 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 			Name:      role.Name,
 			Namespace: role.Namespace,
 		}, &role); err != nil {
-			logger.Error(err, "Role fetch failed")
+			logger.Error(err, "Role fetch failed", "roleName", role.Name)
 			return ctrl.Result{}, err
 		}
 
 		role.Rules = rules
 		if err := r.Update(ctx, &role); err != nil {
-			logger.Error(err, "Role update failed")
+			logger.Error(err, "Role update failed", "roleName", role.Name)
 			return ctrl.Result{}, err
 		}
 
@@ -140,45 +133,18 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		logger.Info("Role has been created", "roleName", role.Name)
 	}
 
-	roleBinding := authorizationv1.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      string(user.UID),
-			Namespace: user.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion: user.APIVersion,
-					Kind:       user.Kind,
-					Name:       user.Name,
-					UID:        user.UID,
-				},
-			},
+	clusterRoles := []authorizationv1.PolicyRule{
+		{
+			APIGroups:     []string{"product.webshop.harikube.info"},
+			Resources:     []string{"tenants"},
+			ResourceNames: []string{user.Name},
+			Verbs:         []string{"get", "list", "watch", "update", "patch"},
 		},
-		Subjects: []authorizationv1.Subject{
-			{
-				Kind:      authorizationv1.ServiceAccountKind,
-				Name:      string(user.UID),
-				Namespace: user.Namespace,
-			},
-		},
-		RoleRef: authorizationv1.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "Role",
-			Name:     string(user.UID),
-		},
-	}
-	if err := r.Create(ctx, &roleBinding); err != nil {
-		if !apierrors.IsAlreadyExists(err) {
-			logger.Error(err, "RoleBinding creation failed")
-			return ctrl.Result{}, err
-		}
-	} else {
-		logger.Info("RoleBinding has been created", "roleBindingName", roleBinding.Name)
 	}
 
-	serviceAccount := corev1.ServiceAccount{
+	clusterRole := authorizationv1.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      string(user.UID),
-			Namespace: user.Namespace,
+			Name: string(user.UID),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: user.APIVersion,
@@ -188,20 +154,141 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 				},
 			},
 		},
+		Rules: clusterRoles,
 	}
-	if err := r.Create(ctx, &serviceAccount); err != nil {
+	if err := r.Create(ctx, &clusterRole); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
-			logger.Error(err, "ServiceAccount creation failed")
+			logger.Error(err, "ClusterRole creation failed", "clusterRoleName", clusterRole.Name)
 			return ctrl.Result{}, err
 		}
+
+		if err := r.Get(ctx, types.NamespacedName{
+			Name:      role.Name,
+			Namespace: role.Namespace,
+		}, &clusterRole); err != nil {
+			logger.Error(err, "ClusterRole fetch failed", "clusterRoleName", clusterRole.Name)
+			return ctrl.Result{}, err
+		}
+
+		clusterRole.Rules = clusterRoles
+		if err := r.Update(ctx, &clusterRole); err != nil {
+			logger.Error(err, "ClusterRole update failed", "clusterRoleName", clusterRole.Name)
+			return ctrl.Result{}, err
+		}
+
+		logger.Info("ClusterRole has been updated", "clusterRoleName", clusterRole.Name)
 	} else {
-		logger.Info("ServiceAccount has been created", "serviceAccountName", serviceAccount.Name)
+		logger.Info("ClusterRole has been created", "clusterRoleName", clusterRole.Name)
 	}
+
+	if user.Generation == 1 && user.Status.LastGeneration == 0 {
+		logger.Info("User created")
+
+		roleBinding := authorizationv1.RoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      string(user.UID),
+				Namespace: user.Namespace,
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: user.APIVersion,
+						Kind:       user.Kind,
+						Name:       user.Name,
+						UID:        user.UID,
+					},
+				},
+			},
+			Subjects: []authorizationv1.Subject{
+				{
+					Kind:      authorizationv1.ServiceAccountKind,
+					Name:      string(user.UID),
+					Namespace: user.Namespace,
+				},
+			},
+			RoleRef: authorizationv1.RoleRef{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "Role",
+				Name:     string(user.UID),
+			},
+		}
+		if err := r.Create(ctx, &roleBinding); err != nil {
+			if !apierrors.IsAlreadyExists(err) {
+				logger.Error(err, "RoleBinding creation failed", "roleBindingName", roleBinding.Name)
+				return ctrl.Result{}, err
+			}
+		} else {
+			logger.Info("RoleBinding has been created", "roleBindingName", roleBinding.Name)
+		}
+
+		clusterRoleBinding := authorizationv1.ClusterRoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: string(user.UID),
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: user.APIVersion,
+						Kind:       user.Kind,
+						Name:       user.Name,
+						UID:        user.UID,
+					},
+				},
+			},
+			Subjects: []authorizationv1.Subject{
+				{
+					Kind:      authorizationv1.ServiceAccountKind,
+					Name:      string(user.UID),
+					Namespace: user.Namespace,
+				},
+			},
+			RoleRef: authorizationv1.RoleRef{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "ClusterRole",
+				Name:     string(user.UID),
+			},
+		}
+		if err := r.Create(ctx, &clusterRoleBinding); err != nil {
+			if !apierrors.IsAlreadyExists(err) {
+				logger.Error(err, "ClusterRoleBinding creation failed", "clusterRoleBindingName", clusterRoleBinding.Name)
+				return ctrl.Result{}, err
+			}
+		} else {
+			logger.Info("ClusterRoleBinding has been created", "clusterRoleBindingName", clusterRoleBinding.Name)
+		}
+
+		serviceAccount := corev1.ServiceAccount{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      string(user.UID),
+				Namespace: user.Namespace,
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: user.APIVersion,
+						Kind:       user.Kind,
+						Name:       user.Name,
+						UID:        user.UID,
+					},
+				},
+			},
+		}
+		if err := r.Create(ctx, &serviceAccount); err != nil {
+			if !apierrors.IsAlreadyExists(err) {
+				logger.Error(err, "ServiceAccount creation failed", "serviceAccountName", serviceAccount.Name)
+				return ctrl.Result{}, err
+			}
+		} else {
+			logger.Info("ServiceAccount has been created", "serviceAccountName", serviceAccount.Name)
+		}
+	} else {
+		if user.Status.LastGeneration == user.Generation {
+			return ctrl.Result{}, nil
+		}
+
+		logger.Info("User updated")
+	}
+
+	patchedUser := user.DeepCopy()
 
 	if hash, ok := user.Annotations["product.webshop.harikube.info/password"]; ok {
 		password := corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      user.Name,
+				Name:      string(user.UID),
 				Namespace: user.Namespace,
 				OwnerReferences: []metav1.OwnerReference{
 					{
@@ -218,7 +305,7 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		}
 		if err := r.Create(ctx, &password); err != nil {
 			if !apierrors.IsAlreadyExists(err) {
-				logger.Error(err, "Secret creation failed")
+				logger.Error(err, "Secret creation failed", "secretName", password.Name)
 				return ctrl.Result{}, err
 			}
 
@@ -226,7 +313,7 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 				Name:      password.Name,
 				Namespace: password.Namespace,
 			}, &password); err != nil {
-				logger.Error(err, "Secret fetch failed")
+				logger.Error(err, "Secret fetch failed", "secretName", password.Name)
 				return ctrl.Result{}, err
 			}
 
@@ -234,7 +321,7 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 				"hash": hash,
 			}
 			if err := r.Update(ctx, &password); err != nil {
-				logger.Error(err, "Secret update failed")
+				logger.Error(err, "Secret update failed", "secretName", password.Name)
 				return ctrl.Result{}, err
 			}
 
@@ -244,12 +331,21 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		}
 
 		delete(user.Annotations, "product.webshop.harikube.info/password")
-		user.Status.PasswordRef = &corev1.LocalObjectReference{
+		if err := r.Update(ctx, &user); err != nil {
+			if apierrors.IsNotFound(err) {
+				return ctrl.Result{}, nil
+			}
+
+			logger.Error(err, "User update failed")
+			return ctrl.Result{}, err
+		}
+
+		patchedUser = user.DeepCopy()
+		patchedUser.Status.PasswordRef = &corev1.LocalObjectReference{
 			Name: password.Name,
 		}
 	}
 
-	patchedUser := user.DeepCopy()
 	patchedUser.Status.LastGeneration = user.Generation
 	if err := r.Status().Patch(ctx, patchedUser, client.MergeFrom(&user)); err != nil {
 		if apierrors.IsNotFound(err) {
