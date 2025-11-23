@@ -23,8 +23,6 @@ spec:
         - name: PASSWD
           value: ($passwd)
     - script:
-        content: cd ../../../../function ; ../bin/faas-cli template store pull python3-http
-    - script:
         content: cd ../../../../function ; ../bin/faas-cli deploy --gateway http://localhost:32767
     - script:
         content: |

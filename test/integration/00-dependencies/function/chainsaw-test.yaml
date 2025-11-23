@@ -11,6 +11,8 @@ spec:
   - name: Build function
     try:
     - script:
+        content: cd ../../../../function ; ../bin/faas-cli template store pull python3-http
+    - script:
         content: cd ../../../../function ; ../bin/faas-cli build
     - script:
         content: cd ../../../../function ; ../bin/faas-cli push
