@@ -23,6 +23,10 @@ import (
 // EmailSpec defines the desired state of Email.
 type EmailSpec struct {
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Format=email
+	// +kubebuilder:validation:MinLength=5
+	// +kubebuilder:validation:MaxLength=256
+	// +kubebuilder:validation:Pattern=`^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$`
 	// FromAddress represents the email address of the recipient.
 	ToAddress string `json:"toAddress"`
 
@@ -31,6 +35,10 @@ type EmailSpec struct {
 	FromName string `json:"fromName"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Format=email
+	// +kubebuilder:validation:MinLength=5
+	// +kubebuilder:validation:MaxLength=256
+	// +kubebuilder:validation:Pattern=`^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$`
 	// FromAddress represents the email address of the sender.
 	FromAddress string `json:"fromAddress"`
 

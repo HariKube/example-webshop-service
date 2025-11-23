@@ -22,6 +22,7 @@ rules:
   - product.webshop.harikube.info
   resources:
   - emails
+  - emailtemplates
   - licences
   - orders
   - payments
@@ -41,7 +42,6 @@ rules:
 - apiGroups:
   - product.webshop.harikube.info
   resources:
-  - emails/finalizers
   - licences/finalizers
   - orders/finalizers
   - payments/finalizers
@@ -55,7 +55,6 @@ rules:
 - apiGroups:
   - product.webshop.harikube.info
   resources:
-  - emails/status
   - licences/status
   - orders/status
   - payments/status

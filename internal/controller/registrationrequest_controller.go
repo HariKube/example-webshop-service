@@ -17,7 +17,11 @@ limitations under the License.
 package controller
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"strings"
+	"text/template"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -30,15 +34,17 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	productv1 "github.com/HariKube/example-webshop-service/api/v1"
+	webhookv1 "github.com/HariKube/example-webshop-service/internal/webhook/v1"
 )
 
 // RegistrationRequestReconciler reconciles a RegistrationRequest object
 type RegistrationRequestReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme    *runtime.Scheme
+	Namespace string
 }
 
-// +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=registrationrequests,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=registrationrequests;emailtemplates,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=registrationrequests/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=registrationrequests/finalizers,verbs=update
 
@@ -113,12 +119,82 @@ func (r *RegistrationRequestReconciler) Reconcile(ctx context.Context, req ctrl.
 		Spec: *request.Spec.User.DeepCopy(),
 	}
 	if err := r.Create(ctx, &user); err != nil {
-		if !apierrors.IsAlreadyExists(err) {
+		if !strings.Contains(err.Error(), fmt.Sprintf(webhookv1.ErrAlreadyExists, user.Spec.Email)) && !apierrors.IsAlreadyExists(err) {
 			logger.Error(err, "User creation failed")
+			return ctrl.Result{}, err
+		}
+
+		if err := r.Get(ctx, types.NamespacedName{
+			Name:      user.Name,
+			Namespace: user.Namespace,
+		}, &user); err != nil {
+			logger.Error(err, "User fetch failed", "userName", user.Name)
 			return ctrl.Result{}, err
 		}
 	} else {
 		logger.Info("User has been created", "userName", user.Name)
+	}
+	user.GetObjectKind().SetGroupVersionKind(productv1.GroupVersion.WithKind("User"))
+
+	emailTemplate := productv1.EmailTemplate{}
+	if err := r.Get(ctx, types.NamespacedName{
+		Name:      "example-webshop-service-registration",
+		Namespace: r.Namespace,
+	}, &emailTemplate); err != nil {
+		if !apierrors.IsAlreadyExists(err) {
+			logger.Error(err, "EmailTemplate fetch failed", "emailTemplateName", "example-webshop-service-registration")
+			return ctrl.Result{}, err
+		}
+	}
+
+	if emailTemplate.Generation != 0 {
+		renderer, err := template.New("registration_template").Parse(emailTemplate.Spec.Body)
+		if err != nil {
+			logger.Error(err, "EmailTemplate parsing failed", "emailTemplateName", emailTemplate.Name)
+			return ctrl.Result{}, err
+		}
+
+		userMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&user)
+		if err != nil {
+			logger.Error(err, "Failed to convert User to unstructured map for template execution")
+			return ctrl.Result{}, err
+		}
+
+		var renderedBody bytes.Buffer
+		if err := renderer.Execute(&renderedBody, userMap); err != nil {
+			logger.Error(err, "EmailTemplate execution failed", "emailTemplateName", emailTemplate.Name)
+			return ctrl.Result{}, err
+		}
+
+		email := productv1.Email{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      user.Name + "-welcome",
+				Namespace: user.Namespace,
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: user.APIVersion,
+						Kind:       user.Kind,
+						Name:       user.Name,
+						UID:        user.UID,
+					},
+				},
+			},
+			Spec: productv1.EmailSpec{
+				ToAddress:   user.Spec.Email,
+				FromName:    emailTemplate.Spec.FromName,
+				FromAddress: emailTemplate.Spec.FromAddress,
+				Subject:     emailTemplate.Spec.Subject,
+				Body:        renderedBody.String(),
+			},
+		}
+		if err := r.Create(ctx, &email); err != nil {
+			if !apierrors.IsAlreadyExists(err) {
+				logger.Error(err, "Email creation failed", "emailName", email.Name)
+				return ctrl.Result{}, err
+			}
+		} else {
+			logger.Info("Email has been created", "emailName", email.Name)
+		}
 	}
 
 	if err := r.Delete(ctx, &request); err != nil {

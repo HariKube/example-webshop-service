@@ -63,9 +63,7 @@ spec:
                     pattern: ^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$
                     type: string
                   firstName:
-                    description: |-
-                      FirstName represents the first name of the user.
-                      Allow basic Unicode letters, spaces, apostrophes, and hyphens.
+                    description: FirstName represents the first name of the user.
                     maxLength: 125
                     minLength: 1
                     pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$
@@ -328,9 +326,7 @@ spec:
                     pattern: ^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$
                     type: string
                   firstName:
-                    description: |-
-                      FirstName represents the first name of the user.
-                      Allow basic Unicode letters, spaces, apostrophes, and hyphens.
+                    description: FirstName represents the first name of the user.
                     maxLength: 125
                     minLength: 1
                     pattern: ^[\p{L}][\p{L}\p{M}\s'\-]*$

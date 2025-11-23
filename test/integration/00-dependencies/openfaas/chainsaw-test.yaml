@@ -1,0 +1,64 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: openfaas
+spec:
+  namespace: default
+  skipDelete: true
+  timeouts:
+    assert: 5m
+    exec: 5m
+  steps:
+  - name: Deploy openfaas
+    try:
+    - script:
+        content: helm repo add openfaas https://openfaas.github.io/faas-netes/
+    - script:
+        content: helm repo update
+    - apply:
+        file: https://raw.githubusercontent.com/openfaas/faas-netes/master/namespaces.yml
+    - apply:
+        resource:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            labels:
+              control-plane: controller-manager
+              app.kubernetes.io/name: example-webshop-service
+              app.kubernetes.io/managed-by: kustomize
+            name: example-webshop-service-system
+    - script:
+        content: |
+          helm upgrade openfaas --install openfaas/openfaas \
+          --namespace openfaas \
+          --set basic_auth=true \
+          --set functionNamespace=example-webshop-service-system \
+          --set serviceType=NodePort \
+          --set gateway.nodePort=32767
+    - assert:
+        resource:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: gateway
+            namespace: openfaas
+          status:
+            readyReplicas: 1
+    - assert:
+        resource:
+          apiVersion: v1
+          kind: Endpoints
+          metadata:
+            name: gateway
+            namespace: openfaas
+          ~.(subsets):
+            (length(addresses) > `0`): true
+    - assert:
+        resource:
+          apiVersion: v1
+          kind: Endpoints
+          metadata:
+            name: gateway-external
+            namespace: openfaas
+          ~.(subsets):
+            (length(addresses) > `0`): true

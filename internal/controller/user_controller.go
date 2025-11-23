@@ -38,7 +38,7 @@ type UserReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=users,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=users;emails,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=users/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=users/finalizers,verbs=update
 

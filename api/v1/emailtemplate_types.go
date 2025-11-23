@@ -35,6 +35,10 @@ type EmailTemplateSpec struct {
 	FromName string `json:"fromName"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Format=email
+	// +kubebuilder:validation:MinLength=5
+	// +kubebuilder:validation:MaxLength=256
+	// +kubebuilder:validation:Pattern=`^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$`
 	// FromAddress represents the email address of the sender.
 	FromAddress string `json:"fromAddress"`
 
@@ -49,12 +53,10 @@ type EmailTemplateSpec struct {
 
 // EmailTemplateStatus defines the observed state of EmailTemplate.
 type EmailTemplateStatus struct {
-	LastGeneration int64 `json:"lastGeneration,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster
 // +kubebuilder:printcolumn:name="DisplayName",type="string",JSONPath=".spec.displayName"
 // +kubebuilder:selectablefield:JSONPath=".spec.displayName"
 

@@ -6,6 +6,9 @@ featureGates:
   "MutatingAdmissionPolicy": true
 nodes:
 - role: control-plane
+  extraPortMappings:
+  - containerPort: 32767
+    hostPort: 32767
   image: kindest/node:v1.34.0
   kubeadmConfigPatches:
   - |

@@ -54,6 +54,10 @@ spec:
                 type: string
               fromAddress:
                 description: FromAddress represents the email address of the sender.
+                format: email
+                maxLength: 256
+                minLength: 5
+                pattern: ^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$
                 type: string
               fromName:
                 description: FromName represents the name of the sender.
@@ -63,6 +67,10 @@ spec:
                 type: string
               toAddress:
                 description: FromAddress represents the email address of the recipient.
+                format: email
+                maxLength: 256
+                minLength: 5
+                pattern: ^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$
                 type: string
             required:
             - body

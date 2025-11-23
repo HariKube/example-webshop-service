@@ -1,0 +1,29 @@
+apiVersion: product.webshop.harikube.info/v1
+kind: EmailTemplate
+metadata:
+  labels:
+    app.kubernetes.io/name: example-webshop-service
+    app.kubernetes.io/managed-by: kustomize
+  name: registration
+  namespace: system
+spec:
+  displayName: Registration Template
+  description: Email template ro generate welcome email during registration.
+  fromName: HariKube
+  fromAddress: info@inspirnation.eu
+  subject: 🚀 Welcome to HariKube! Your Account is Ready.
+  body: |
+    Hi {{ .spec.firstName }} {{ .spec.lastName }},
+
+    Welcome aboard! We're thrilled to have you join the HariKube community.
+
+    Your account is now fully active, and you're ready to start exploring the power and simplicity of HariKube.
+
+    Need a quick start? Check out our getting started guide here: https://harikube.info/docs/installation/
+
+    If you have any questions, our support team is always here to help.
+
+    Happy HariKubing!
+
+    Best regards,
+    The HariKube Team

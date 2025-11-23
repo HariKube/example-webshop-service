@@ -1,0 +1,13 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://localhost:32767
+functions:
+  email:
+    lang: python3-http
+    handler: ./email
+    image: quay.io/harikube/example-webshop-service-email:latest
+    environment:
+      API_ENDPOINT: "https://api.example.com/v1"
+    labels:
+      com.openfaas.serviceaccount: example-webshop-service-controller-manager

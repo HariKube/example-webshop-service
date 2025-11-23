@@ -1,0 +1,17 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: function
+spec:
+  namespace: default
+  skipDelete: true
+  timeouts:
+    exec: 5m
+  steps:
+  - name: Build function
+    try:
+    - script:
+        content: cd ../../../../function ; ../bin/faas-cli build
+    - script:
+        content: cd ../../../../function ; ../bin/faas-cli push
+

@@ -4,6 +4,8 @@ metadata:
   name: regisration
 spec:
   skipDelete: true
+  timeouts:
+    assert: 5m
   steps:
   - name: Create RegistrationRequest
     try:
@@ -30,7 +32,7 @@ spec:
     - sleep:
         duration: 5s
     - script:
-        content: "kubectl get users.product.webshop.harikube.info -A --field-selector='spec.email=john.doe@example.com' -o=json"
+        content: kubectl get users.product.webshop.harikube.info -A --field-selector='spec.email=john.doe@example.com' -o=json
         outputs:
         - name: users
           value: (json_parse($stdout))
@@ -40,6 +42,8 @@ spec:
           kind: Tenant
           metadata:
             name: ($users.items[0].metadata.namespace)
+            labels:
+              skip-controller-manager-metadata-caching: "true"
             finalizers:
             - product.webshop.harikube.info/tenant
           spec:
@@ -69,6 +73,8 @@ spec:
           metadata:
             name: ($users.items[0].metadata.name)
             namespace: ($users.items[0].metadata.namespace)
+            labels:
+              skip-controller-manager-metadata-caching: "true"
           spec:
             firstName: John
             lastName: D'oe-Smith
@@ -103,6 +109,14 @@ spec:
           # - apiGroups:
           #   - product.webshop.harikube.info
           #   resources:
+          #   - orders
+          #   verbs:
+          #   - get
+          #   - list
+          #   - watch
+          # - apiGroups:
+          #   - product.webshop.harikube.info
+          #   resources:
           #   - registrytokens
           #   verbs:
           #   - get
@@ -110,14 +124,6 @@ spec:
           #   - watch
           #   - create
           #   - delete
-          # - apiGroups:
-          #   - product.webshop.harikube.info
-          #   resources:
-          #   - orders
-          #   verbs:
-          #   - get
-          #   - list
-          #   - watch
           # - apiGroups:
           #   - product.webshop.harikube.info
           #   resourceNames:
@@ -140,19 +146,19 @@ spec:
             - apiVersion: product.webshop.harikube.info/v1
               kind: User
               name: ($users.items[0].metadata.name)
-          # rules:
-          # - apiGroups:
-          #   - product.webshop.harikube.info
-          #   resourceNames:
-          #   - ($users.items[0].metadata.namespace)
-          #   resources:
-          #   - tenants
-          #   verbs:
-          #   - get
-          #   - list
-          #   - watch
-          #   - update
-          #   - patch
+          rules:
+          - apiGroups:
+            - product.webshop.harikube.info
+            resourceNames:
+            - ($users.items[0].metadata.namespace)
+            resources:
+            - tenants
+            verbs:
+            - get
+            - list
+            - watch
+            - update
+            - patch
     - assert:
         resource:
           apiVersion: rbac.authorization.k8s.io/v1
@@ -201,3 +207,36 @@ spec:
             - apiVersion: product.webshop.harikube.info/v1
               kind: User
               name: ($users.items[0].metadata.name)
+    - assert:
+        resource:
+          apiVersion: product.webshop.harikube.info/v1
+          kind: Email
+          metadata:
+            name: (join('-', [$users.items[0].metadata.name, 'welcome']))
+            namespace: ($users.items[0].metadata.namespace)
+            labels:
+              skip-controller-manager-metadata-caching: "true"
+            ownerReferences:
+            - apiVersion: product.webshop.harikube.info/v1
+              kind: User
+              name: ($users.items[0].metadata.name)
+          spec:
+            toAddress: john.doe@example.com
+            fromName: HariKube
+            fromAddress: info@inspirnation.eu
+            subject: 🚀 Welcome to HariKube! Your Account is Ready.
+            body: |
+              Hi John D'oe-Smith,
+
+              Welcome aboard! We're thrilled to have you join the HariKube community.
+
+              Your account is now fully active, and you're ready to start exploring the power and simplicity of HariKube.
+
+              Need a quick start? Check out our getting started guide here: https://harikube.info/docs/installation/
+
+              If you have any questions, our support team is always here to help.
+
+              Happy HariKubing!
+
+              Best regards,
+              The HariKube Team

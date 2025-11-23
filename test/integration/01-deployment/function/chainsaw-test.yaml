@@ -1,0 +1,26 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: function
+spec:
+  namespace: default
+  skipDelete: true
+  timeouts:
+    exec: 5m
+  steps:
+  - name: Deploy function
+    try:
+    - sleep:
+        duration: 5s
+    - script:
+        content: kubectl get secret -n openfaas basic-auth -o jsonpath='{.data.basic-auth-password}'| base64 -d
+        outputs:
+        - name: passwd
+          value: ($stdout)
+    - script:
+        content: cd ../../../../function ; ../bin/faas-cli login --password ${PASSWD} --gateway http://localhost:32767
+        env:
+        - name: PASSWD
+          value: ($passwd)
+    - script:
+        content: cd ../../../../function ; ../bin/faas-cli deploy --gateway http://localhost:32767

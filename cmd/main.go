@@ -244,13 +244,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Product")
 		os.Exit(1)
 	}
-	if err := (&controller.EmailReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Email")
-		os.Exit(1)
-	}
 	if err := (&controller.RegistryTokenReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -287,8 +280,9 @@ func main() {
 		os.Exit(1)
 	}
 	if err := (&controller.RegistrationRequestReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Namespace: os.Getenv("POD_NAMESPACE"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RegistrationRequest")
 		os.Exit(1)

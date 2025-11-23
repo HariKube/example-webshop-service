@@ -3,18 +3,11 @@ kind: Test
 metadata:
   name: operator
 spec:
-  timeouts:
-    exec: 5m
   namespace: default
   skipDelete: true
+  timeouts:
+    assert: 5m
   steps:
-  - name: Build operator
-    try:
-    - script:
-        content: make -C ../../../.. package docker-build docker-load
-        env:
-        - name: IMG
-          value: harikube/example-webshop-service:snapshot
   - name: Deploy operator
     try:
     - apply:

@@ -78,7 +78,7 @@ test: manifests generate fmt vet setup-envtest ## Run tests.
 KIND_CLUSTER ?= example-webshop-service-test-e2e
 
 .PHONY: setup-test-integration
-setup-test-integration: cleanup-test-integration ## Set up a Kind cluster for integration tests if it does not exist
+setup-test-integration: chainsaw faas cleanup-test-integration ## Set up a Kind cluster for integration tests if it does not exist
 	@command -v $(KIND) >/dev/null 2>&1 || { \
 		echo "Kind is not installed. Please execute make deps."; \
 		exit 1; \
@@ -88,14 +88,14 @@ setup-test-integration: cleanup-test-integration ## Set up a Kind cluster for in
 
 	$(KUBECTL) wait --for=condition=Ready node/$(KIND_CLUSTER)-control-plane --timeout=120s
 
-.PHONY: test-integration
-test-integration: chainsaw setup-test-integration _test-integration
-
-_test-integration:
 	$(CHAINSAW) test --test-dir test/integration/00-dependencies
-	$(CHAINSAW) test --test-dir test/integration/01-operator
+	$(CHAINSAW) test --test-dir test/integration/01-deployment
+
+.PHONY: test-integration
+test-integration: setup-test-integration _test-integration cleanup-test-integration
+
+_test-integration: chainsaw
 	$(CHAINSAW) test --test-dir test/integration/02-user
-# 	$(MAKE) cleanup-test-integration
 
 .PHONY: cleanup-test-integration
 cleanup-test-integration: ## Tear down the Kind cluster used for integration tests
@@ -201,6 +201,7 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
 VCLUSTER ?= $(LOCALBIN)/vcluster
 CHAINSAW ?= $(LOCALBIN)/chainsaw
+FAAS ?= $(LOCALBIN)/faas-cli
 
 ## Tool Versions
 KUBE_VERSION ?= v1.34.0
@@ -215,6 +216,7 @@ ENVTEST_K8S_VERSION ?= $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -
 GOLANGCI_LINT_VERSION ?= v2.1.0
 VCLUSTER_VERSION ?= v0.30.0
 CHAINSAW_VERSION ?= v0.2.12
+FAAS_VERSION ?= 0.17.8
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -230,6 +232,13 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 chainsaw: $(CHAINSAW) ## Download chainsaw locally if necessary.
 $(CHAINSAW): $(LOCALBIN)
 	$(call go-install-tool,$(CHAINSAW),github.com/kyverno/chainsaw,$(CHAINSAW_VERSION))
+
+.PHONY: faas
+faas: $(FAAS) ## Download OpenFaaS locally if necessary.
+$(FAAS):
+	$(MAKE) $(LOCALBIN)
+	curl -Lo $(FAAS) https://github.com/openfaas/faas-cli/releases/download/$(FAAS_VERSION)/faas-cli
+	chmod +x $(FAAS)
 
 .PHONY: setup-envtest
 setup-envtest: envtest ## Download the binaries required for ENVTEST in the local bin directory.

@@ -3,10 +3,10 @@ kind: Test
 metadata:
   name: cert-manager
 spec:
-  timeouts:
-    assert: 5m
   namespace: default
   skipDelete: true
+  timeouts:
+    assert: 5m
   steps:
   - name: Deploy cert-manager
     try:

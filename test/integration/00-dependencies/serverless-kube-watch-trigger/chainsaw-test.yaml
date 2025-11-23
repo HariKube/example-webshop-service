@@ -1,0 +1,52 @@
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: serverless-kube-watch-trigger
+spec:
+  namespace: default
+  skipDelete: true
+  timeouts:
+    assert: 5m
+  steps:
+  - name: Deploy serverless-kube-watch-trigger
+    try:
+    - apply:
+        resource:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: serverless-kube-watch-trigger-emails-rolebinding
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: serverless-kube-watch-trigger-emails-role
+          subjects:
+          - kind: ServiceAccount
+            name: serverless-kube-watch-trigger-controller-manager
+            namespace: serverless-kube-watch-trigger-system
+    - apply:
+        resource:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRole
+          metadata:
+            name: serverless-kube-watch-trigger-emails-role
+          rules:
+          - apiGroups:
+            - product.webshop.harikube.info
+            resources:
+            - emails
+            verbs:
+            - get
+            - list
+            - watch
+    - apply:
+        file: https://github.com/HariKube/serverless-kube-watch-trigger/releases/download/beta-v1.0.0-6/bundle.yaml
+    - assert:
+        resource:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: serverless-kube-watch-trigger-controller-manager
+            namespace: serverless-kube-watch-trigger-system
+          status:
+            availableReplicas: 1

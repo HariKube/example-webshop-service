@@ -28,3 +28,6 @@ go.work
 
 # generated Kubernetes manifests
 package/*
+template
+build
+.secrets

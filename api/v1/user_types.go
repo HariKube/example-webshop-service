@@ -24,33 +24,32 @@ import (
 // UserSpec defines the desired state of User.
 type UserSpec struct {
 	// +kubebuilder:validation:Required
-	// FirstName represents the first name of the user.
-	// Allow basic Unicode letters, spaces, apostrophes, and hyphens.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=125
 	// +kubebuilder:validation:Pattern=`^[\p{L}][\p{L}\p{M}\s'\-]*$`
+	// FirstName represents the first name of the user.
 	FirstName string `json:"firstName"`
 
 	// +kubebuilder:validation:Required
-	// LastName represents the last name of the user.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=125
 	// +kubebuilder:validation:Pattern=`^[\p{L}][\p{L}\p{M}\s'\-]*$`
+	// LastName represents the last name of the user.
 	LastName string `json:"lastName"`
 
 	// +kubebuilder:validation:Required
-	// Email represents the email address of the user.
 	// +kubebuilder:validation:Format=email
 	// +kubebuilder:validation:MinLength=5
 	// +kubebuilder:validation:MaxLength=256
 	// +kubebuilder:validation:Pattern=`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
+	// Email represents the email address of the user.
 	Email string `json:"email"`
 
 	// +kubebuilder:validation:Optional
-	// PhoneNumber represents the phone number of the user.
 	// +kubebuilder:validation:MinLength=7
 	// +kubebuilder:validation:MaxLength=15
 	// +kubebuilder:validation:Pattern=`^\+?[1-9]\d{1,14}$`
+	// PhoneNumber represents the phone number of the user.
 	PhoneNumber *string `json:"phoneNumber,omitempty"`
 }
 

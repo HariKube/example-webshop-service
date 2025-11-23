@@ -104,6 +104,7 @@ func New(dynamicClient dynamic.Interface, scheme *runtime.Scheme, port, certPath
 								if ev.Object == nil {
 									continue
 								}
+
 								if ev.Type == watch.Deleted {
 									w.WriteHeader(http.StatusCreated)
 									if fl, ok := w.(http.Flusher); ok {
@@ -122,6 +123,10 @@ func New(dynamicClient dynamic.Interface, scheme *runtime.Scheme, port, certPath
 					},
 					RawEndpoints: map[string]http.HandlerFunc{
 						"/login": func(w http.ResponseWriter, r *http.Request) {
+							w.Header().Set("Content-Type", "application/json; charset=utf-8")
+							w.WriteHeader(http.StatusOK)
+						},
+						"/verify": func(w http.ResponseWriter, r *http.Request) {
 							w.Header().Set("Content-Type", "application/json; charset=utf-8")
 							w.WriteHeader(http.StatusOK)
 						},

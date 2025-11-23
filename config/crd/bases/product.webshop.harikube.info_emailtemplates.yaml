@@ -12,7 +12,7 @@ spec:
     listKind: EmailTemplateList
     plural: emailtemplates
     singular: emailtemplate
-  scope: Cluster
+  scope: Namespaced
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.displayName
@@ -55,6 +55,10 @@ spec:
                 type: string
               fromAddress:
                 description: FromAddress represents the email address of the sender.
+                format: email
+                maxLength: 256
+                minLength: 5
+                pattern: ^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$
                 type: string
               fromName:
                 description: FromName represents the name of the sender.
@@ -71,10 +75,6 @@ spec:
             type: object
           status:
             description: EmailTemplateStatus defines the observed state of EmailTemplate.
-            properties:
-              lastGeneration:
-                format: int64
-                type: integer
             type: object
         type: object
     selectableFields:

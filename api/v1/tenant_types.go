@@ -24,39 +24,39 @@ import (
 // TenantSpec defines the desired state of Tenant.
 type TenantSpec struct {
 	// +kubebuilder:validation:Optional
-	// CompanyName represents the company name of the user.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=250
+	// CompanyName represents the company name of the user.
 	CompanyName string `json:"companyName,omitempty"`
 
 	// +kubebuilder:validation:Required
-	// Country represents the country of the user.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=3
+	// Country represents the country of the user.
 	Country string `json:"country"`
 
 	// +kubebuilder:validation:Required
-	// City represents the city of the user.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=50
+	// City represents the city of the user.
 	City string `json:"city"`
 
 	// +kubebuilder:validation:Required
-	// Address represents the address of the user.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=512
+	// Address represents the address of the user.
 	Address string `json:"address"`
 
 	// +kubebuilder:validation:Required
-	// PostalCode represents the postal code of the user.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=30
+	// PostalCode represents the postal code of the user.
 	PostalCode string `json:"postalCode"`
 
 	// +kubebuilder:validation:Optional
-	// TaxNumber represents the tax number of the user.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=256
+	// TaxNumber represents the tax number of the user.
 	TaxNumber string `json:"taxNumber,omitempty"`
 }
 

@@ -1,0 +1,30 @@
+apiVersion: triggers.harikube.info/v1
+kind: HTTPTrigger
+metadata:
+  labels:
+    app.kubernetes.io/name: example-webshop-service
+    app.kubernetes.io/managed-by: kustomize
+  name: email
+  namespace: system
+spec:
+  resource:
+    apiVersion: product.webshop.harikube.info/v1
+    kind: Email
+  eventTypes:
+    - ADDED
+  url:
+    service:
+      name: gateway
+      namespace: openfaas
+      portName: http
+      scheme: http
+      uri:
+        static: /function/email
+  method: POST
+  body:
+    contentType: application/json
+    template: |
+      {{ . }}
+  delivery:
+    timeout: 10s
+    retries: 3
