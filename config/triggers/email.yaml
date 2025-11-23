@@ -24,7 +24,7 @@ spec:
   body:
     contentType: application/json
     template: |
-      {{ . }}
+      {{ toJson . }}
   delivery:
     timeout: 10s
     retries: 3

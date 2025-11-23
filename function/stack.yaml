@@ -8,6 +8,8 @@ functions:
     handler: ./email
     image: quay.io/harikube/example-webshop-service-email:latest
     environment:
-      API_ENDPOINT: "https://api.example.com/v1"
-    labels:
-      com.openfaas.serviceaccount: example-webshop-service-controller-manager
+      SMTP_HOST: ""
+      SMTP_PORT: ""
+      SMTP_USERNAME: ""
+      SMTP_PASSWORD: ""
+      SMTP_USE_TLS: ""

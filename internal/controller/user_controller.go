@@ -39,7 +39,7 @@ type UserReconciler struct {
 }
 
 // +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=users;emails,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=users/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=users/status;emails/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=product.webshop.harikube.info,resources=users/finalizers,verbs=update
 
 // +kubebuilder:rbac:groups="",resources=secrets;serviceaccounts,verbs=get;list;watch;create;update;patch;delete

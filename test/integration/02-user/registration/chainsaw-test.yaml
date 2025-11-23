@@ -5,7 +5,7 @@ metadata:
 spec:
   skipDelete: true
   timeouts:
-    assert: 5m
+    assert: 1m
   steps:
   - name: Create RegistrationRequest
     try:
@@ -240,3 +240,5 @@ spec:
 
               Best regards,
               The HariKube Team
+          status:
+            errorMessage: 'Failed to send email: invalid literal for int() with base 10: '''''

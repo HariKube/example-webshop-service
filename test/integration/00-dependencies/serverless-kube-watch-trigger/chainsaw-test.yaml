@@ -40,7 +40,7 @@ spec:
             - list
             - watch
     - apply:
-        file: https://github.com/HariKube/serverless-kube-watch-trigger/releases/download/beta-v1.0.0-6/bundle.yaml
+        file: https://github.com/HariKube/serverless-kube-watch-trigger/releases/download/beta-v1.0.0-7/bundle.yaml
     - assert:
         resource:
           apiVersion: apps/v1

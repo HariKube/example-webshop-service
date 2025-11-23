@@ -24,3 +24,18 @@ spec:
           value: ($passwd)
     - script:
         content: cd ../../../../function ; ../bin/faas-cli deploy --gateway http://localhost:32767
+    - script:
+        content: |
+          kubectl patch deployment email -n example-webshop-service-system --type='json' \
+            -p='[{"op": "replace", "path": "/spec/template/spec/serviceAccountName", "value": "example-webshop-service-controller-manager"}]'
+    - script:
+        content: kubectl rollout status deployment/email -n example-webshop-service-system --timeout=60s
+    - assert:
+        resource:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: email
+            namespace: example-webshop-service-system
+          status:
+            readyReplicas: 1
