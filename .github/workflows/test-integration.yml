@@ -93,6 +93,13 @@ jobs:
         with:
           go-version-file: go.mod
       
+      - name: Login to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.REGISTRY }}
+          username: ${{ vars.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+
       - name: Extract Kind version
         run: |
           grep "KIND_VERSION ?= " Makefile | cut -d'=' -f2 | awk '{print "kindVersion="$NF}'  >> $GITHUB_OUTPUT
