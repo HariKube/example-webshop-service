@@ -141,7 +141,7 @@ func (r *RegistrationRequestReconciler) Reconcile(ctx context.Context, req ctrl.
 		Name:      "example-webshop-service-registration",
 		Namespace: r.Namespace,
 	}, &emailTemplate); err != nil {
-		if !apierrors.IsAlreadyExists(err) {
+		if !apierrors.IsNotFound(err) {
 			logger.Error(err, "EmailTemplate fetch failed", "emailTemplateName", "example-webshop-service-registration")
 			return ctrl.Result{}, err
 		}
