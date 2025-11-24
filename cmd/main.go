@@ -340,7 +340,7 @@ func main() {
 		}
 	}
 
-	if err := mgr.Add(apiservicev1.New(dynamicKubeClient, mgr.GetScheme(), ":7443", apiServiceCertPath, apiServiceCertName, apiServiceCertKey)); err != nil {
+	if err := mgr.Add(apiservicev1.New(dynamicKubeClient, mgr.GetScheme(), ":7443", apiServiceCertPath, apiServiceCertName, apiServiceCertKey, os.Getenv("POD_NAMESPACE"))); err != nil {
 		setupLog.Error(err, "unable to add API service to manager")
 		os.Exit(1)
 	}

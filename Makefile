@@ -88,14 +88,17 @@ setup-test-integration: chainsaw faas cleanup-test-integration ## Set up a Kind 
 
 	$(KUBECTL) wait --for=condition=Ready node/$(KIND_CLUSTER)-control-plane --timeout=120s
 
-	$(CHAINSAW) test --test-dir test/integration/00-dependencies
-	$(CHAINSAW) test --test-dir test/integration/01-deployment
+	$(CHAINSAW) test --test-dir test/integration/00-init
 
 .PHONY: test-integration
-test-integration: setup-test-integration _test-integration cleanup-test-integration
+test-integration: setup-test-integration _test-integration-build _test-integration-run cleanup-test-integration
 
-_test-integration: chainsaw
-	$(CHAINSAW) test --test-dir test/integration/02-user
+_test-integration-build: chainsaw
+	$(CHAINSAW) test --test-dir test/integration/01-build
+	$(CHAINSAW) test --test-dir test/integration/02-deploy
+
+_test-integration-run: chainsaw
+	$(CHAINSAW) test --test-dir test/integration/03-user
 
 .PHONY: cleanup-test-integration
 cleanup-test-integration: ## Tear down the Kind cluster used for integration tests

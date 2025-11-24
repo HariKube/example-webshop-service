@@ -11,7 +11,4 @@ spec:
   - name: Build operator
     try:
     - script:
-        content: make -C ../../../.. package docker-build docker-load
-        env:
-        - name: IMG
-          value: harikube/example-webshop-service:snapshot
+        content: TAG=$(date +"%s") make -C ../../../.. package docker-build docker-load

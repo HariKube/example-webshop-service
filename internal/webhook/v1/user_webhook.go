@@ -20,7 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -29,8 +31,6 @@ import (
 
 	productv1 "github.com/HariKube/example-webshop-service/api/v1"
 )
-
-const ErrAlreadyExists = "a user with email %s already exists"
 
 // log is for logging in this package.
 var userlog = logf.Log.WithName("user-resource")
@@ -104,7 +104,8 @@ func (v *UserCustomValidator) ValidateCreate(ctx context.Context, obj runtime.Ob
 	if err := v.List(ctx, existnigUsers, client.MatchingFields{"spec.email": user.Spec.Email}); err != nil {
 		return nil, fmt.Errorf("failed to list existing users: %w", err)
 	} else if len(existnigUsers.Items) > 0 {
-		return nil, fmt.Errorf(ErrAlreadyExists, user.Spec.Email)
+		gr := schema.GroupResource{Group: productv1.GroupVersion.Group, Resource: "users"}
+		return nil, apierrors.NewAlreadyExists(gr, fmt.Sprintf("email:%s", user.Spec.Email))
 	}
 
 	if len(user.Annotations) == 0 || user.Annotations["product.webshop.harikube.info/password"] == "" {
@@ -131,7 +132,8 @@ func (v *UserCustomValidator) ValidateUpdate(ctx context.Context, oldObj, newObj
 		if err := v.List(ctx, existnigUsers, client.MatchingFields{"spec.email": user.Spec.Email}); err != nil {
 			return nil, fmt.Errorf("failed to list existing users: %w", err)
 		} else if len(existnigUsers.Items) > 0 {
-			return nil, fmt.Errorf("a user with email %s already exists", user.Spec.Email)
+			gr := schema.GroupResource{Group: productv1.GroupVersion.Group, Resource: "users"}
+			return nil, apierrors.NewAlreadyExists(gr, fmt.Sprintf("email:%s", user.Spec.Email))
 		}
 	}
 

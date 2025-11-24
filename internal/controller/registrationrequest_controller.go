@@ -19,8 +19,6 @@ package controller
 import (
 	"bytes"
 	"context"
-	"fmt"
-	"strings"
 	"text/template"
 	"time"
 
@@ -34,7 +32,6 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	productv1 "github.com/HariKube/example-webshop-service/api/v1"
-	webhookv1 "github.com/HariKube/example-webshop-service/internal/webhook/v1"
 )
 
 // RegistrationRequestReconciler reconciles a RegistrationRequest object
@@ -119,7 +116,7 @@ func (r *RegistrationRequestReconciler) Reconcile(ctx context.Context, req ctrl.
 		Spec: *request.Spec.User.DeepCopy(),
 	}
 	if err := r.Create(ctx, &user); err != nil {
-		if !strings.Contains(err.Error(), fmt.Sprintf(webhookv1.ErrAlreadyExists, user.Spec.Email)) && !apierrors.IsAlreadyExists(err) {
+		if !apierrors.IsAlreadyExists(err) {
 			logger.Error(err, "User creation failed")
 			return ctrl.Result{}, err
 		}

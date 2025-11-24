@@ -6,15 +6,15 @@ spec:
   skipDelete: true
   timeouts:
     assert: 1m
+    exec: 1m
   steps:
   - name: Create RegistrationRequest
     try:
-    - apply:
-        resource:
+    - script:
+        content: |
+          cat | kubectl create --raw /apis/api.product.webshop.harikube.info/v1/registrations/tech-innovators-inc -f - <<EOF
           apiVersion: product.webshop.harikube.info/v1
           kind: RegistrationRequest
-          metadata:
-            name: tech-innovators-inc
           spec:
             user:
               firstName: John
@@ -29,8 +29,7 @@ spec:
               address: 123 Main St, Apt 4B
               postalCode: '10001'
               taxNumber: ABC-123456789
-    - sleep:
-        duration: 5s
+          EOF
     - script:
         content: kubectl get users.product.webshop.harikube.info -A --field-selector='spec.email=john.doe@example.com' -o=json
         outputs:

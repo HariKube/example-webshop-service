@@ -1,0 +1,134 @@
+title User Registration
+
+actor User
+participantgroup #lightyellow **Kubernetes**
+participantgroup #9CB3C9 **Control Plane**
+boundary K8S #orange
+entity HariKube #pink
+database ETCD #lightgrey
+database TenantDatabase #lightgrey
+database UserDatabase #lightgrey
+database EmailDatabase #lightgrey
+end
+participantgroup #B0E0E6 **Webhook**
+entity RegistrationRequestWebhook #4682B4
+entity TenantWebhook #4682B4
+entity UserWebhook #4682B4
+end
+participantgroup #2E8B57 **Operator**
+control RegistrationRequestController #3CB371
+control TenantController #3CB371
+control UserController #3CB371
+end
+participantgroup #90EE90 **Serverless**
+control EmailTrigger #32CD32
+boundary EmailFunction #32CD32
+end
+participantgroup #4682B4 **REST**
+boundary API #ADD8E6
+end
+end
+
+lifelinestyle K8S #lightgray;1;solid
+lifelinestyle HariKube #lightgray;1;solid
+lifelinestyle ETCD #lightgray;1;solid
+
+lifelinestyle API #lightgray;1;solid
+lifelinestyle RegistrationRequestController #lightgrey;1;solid
+lifelinestyle RegistrationRequestWebhook #gray;1;solid
+lifelinestyle TenantWebhook #gray;1;solid
+lifelinestyle UserWebhook #gray;1;solid
+
+User->K8S:Request
+K8S->API:Request
+activate API
+API<->K8S:< RegistrationRequest >
+activate K8S
+K8S<<-->>*RegistrationRequestWebhook:Defaulting
+K8S<<-->>RegistrationRequestWebhook:Validation
+destroysilent RegistrationRequestWebhook
+K8S<<-->>HariKube:Persist RegistrationRequest
+HariKube<<-->>*ETCD:Persist RegistrationRequest
+destroysilent ETCD
+deactivate K8S
+opt Trigger RegistrationRequest
+K8S-->>*RegistrationRequestController:
+activate RegistrationRequestController
+RegistrationRequestController<->K8S:< Tenant >
+activate K8S
+K8S<<-->>*TenantWebhook:Defaulting
+destroysilent TenantWebhook
+K8S<<-->>HariKube:Persist Tenant
+HariKube<<-->>*TenantDatabase:Persist Tenant
+destroysilent TenantDatabase
+deactivate K8S
+deactivate RegistrationRequestController
+RegistrationRequestController-->>(1)RegistrationRequestController:Wait for Namespace
+activate RegistrationRequestController
+RegistrationRequestController<->K8S:< User >
+activate K8S
+K8S<<-->>*UserWebhook:Validation
+destroysilent UserWebhook
+K8S<<-->>HariKube:Persist User
+HariKube<<-->>*UserDatabase:Persist User
+destroysilent UserDatabase
+deactivate K8S
+RegistrationRequestController<->K8S:Fetch EmailTemplate
+RegistrationRequestController->K8S:< Email >
+activate K8S
+K8S<<-->>HariKube: Persist Email
+HariKube<<-->>*EmailDatabase: Persist Email
+destroysilent EmailDatabase
+deactivate K8S
+RegistrationRequestController<->K8S:Delete RegistrationRequest
+deactivate RegistrationRequestController
+destroysilent RegistrationRequestController
+end
+opt Trigger Tenant
+K8S-->>*TenantController:
+activate TenantController
+TenantController<->K8S:< Namespace >
+activate K8S
+K8S<<-->>HariKube:Persist Namespace
+HariKube<<-->>*ETCD:Persist Namespace
+destroysilent ETCD
+deactivate K8S
+deactivate TenantController
+destroysilent TenantController
+end
+opt Trigger User
+K8S-->>*UserController:
+activate UserController
+UserController<->K8S:< RBAC >
+activate K8S
+K8S<<-->>HariKube:Persist RBAC
+HariKube<<-->>*ETCD:Persist RBAC
+deactivate K8S
+UserController<->K8S:< Password Secret >
+activate K8S
+K8S<<-->>HariKube:Persist Password Secret
+HariKube<<-->>ETCD:Persist Password Secret
+destroysilent ETCD
+deactivate K8S
+deactivate UserController
+destroysilent UserController
+end
+opt Trigger Email
+K8S-->>*EmailTrigger:
+activate EmailTrigger
+EmailTrigger<->*EmailFunction:Send email
+activate EmailFunction
+EmailFunction->User: Send email
+EmailFunction<->K8S:Update status
+K8S<<-->>HariKube:Update status
+HariKube<<-->>*EmailDatabase:Update status
+destroysilent EmailDatabase
+deactivate EmailTrigger
+deactivate EmailFunction
+destroysilent EmailTrigger
+destroysilent EmailFunction
+end
+K8S-->>API:Trigger RegistrationRequest Delete
+API->K8S:201 [OK]
+deactivate API
+K8S->User:201 [OK]
