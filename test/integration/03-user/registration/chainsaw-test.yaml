@@ -240,4 +240,4 @@ spec:
               Best regards,
               The HariKube Team
           status:
-            errorMessage: 'Failed to send email: invalid literal for int() with base 10: '''''
+            errorMessage: 'Failed to send email: [Errno 111] Connection refused'

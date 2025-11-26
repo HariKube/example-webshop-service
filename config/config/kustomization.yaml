@@ -1,0 +1,6 @@
+namespace: example-webshop-service-system
+namePrefix: example-webshop-service-
+resources:
+- email-registration.yaml
+- email-trigger.yaml
+- email-smtp-secret.yaml

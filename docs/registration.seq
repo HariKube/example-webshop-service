@@ -1,6 +1,6 @@
 title User Registration
 
-actor User
+actor User #black
 participantgroup #lightyellow **Kubernetes**
 participantgroup #9CB3C9 **Control Plane**
 boundary K8S #orange
@@ -40,7 +40,9 @@ lifelinestyle TenantWebhook #gray;1;solid
 lifelinestyle UserWebhook #gray;1;solid
 
 User->K8S:Request
+activate K8S
 K8S->API:Request
+deactivate K8S
 activate API
 API<->K8S:< RegistrationRequest >
 activate K8S
@@ -119,9 +121,11 @@ activate EmailTrigger
 EmailTrigger<->*EmailFunction:Send email
 activate EmailFunction
 EmailFunction->User: Send email
-EmailFunction<->K8S:Update status
+EmailFunction<->K8S:Update 
+activate K8S
 K8S<<-->>HariKube:Update status
 HariKube<<-->>*EmailDatabase:Update status
+deactivate K8S
 destroysilent EmailDatabase
 deactivate EmailTrigger
 deactivate EmailFunction
@@ -130,5 +134,7 @@ destroysilent EmailFunction
 end
 K8S-->>API:Trigger RegistrationRequest Delete
 API->K8S:201 [OK]
+activate K8S
 deactivate API
 K8S->User:201 [OK]
+deactivate K8S

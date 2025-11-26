@@ -12,6 +12,8 @@ spec:
     try:
     - apply:
         file: ../../../../package/bundle.yaml
+    - script:
+        content: make -C ../../../.. config
     - assert:
         resource:
           apiVersion: apps/v1

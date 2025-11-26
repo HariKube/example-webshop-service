@@ -7,9 +7,5 @@ functions:
     lang: python3-http
     handler: ./email
     image: quay.io/harikube/example-webshop-service-email:latest
-    environment:
-      SMTP_HOST: ""
-      SMTP_PORT: ""
-      SMTP_USERNAME: ""
-      SMTP_PASSWORD: ""
-      SMTP_USE_TLS: ""
+    secrets:
+      - example-webshop-service-smtp-details
