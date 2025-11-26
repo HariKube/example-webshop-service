@@ -12,8 +12,8 @@ spec:
     try:
     - sleep:
         duration: 5s
-    - script:
-        content: make -C ../../../.. config
+    - apply:
+        file: ../../../../package/config.yaml
     - script:
         content: kubectl get secret -n openfaas basic-auth -o jsonpath='{.data.basic-auth-password}'| base64 -d
         outputs:

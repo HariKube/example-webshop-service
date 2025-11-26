@@ -87,7 +87,6 @@ exe "kubectl logs -n harikube -l app=harikube | grep 'Backends registered' | tai
 exe vcluster connect harikube
 
 exe kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.3/cert-manager.yaml
-exe kubectl apply -f https://github.com/prometheus-operator/prometheus-operator/releases/download/v0.77.1/stripped-down-crds.yaml
 exe kubectl wait -n cert-manager --for=jsonpath='{.status.readyReplicas}'=1 deployment/cert-manager-webhook --timeout=2m
 
 exe "echo '
@@ -146,10 +145,42 @@ exe "(cd function ; ../bin/faas-cli deploy --gateway http://${KINEIP}:32767)"
 exe 'kubectl patch deployment email -n example-webshop-service-system --type=json -p='\''[{"op": "replace", "path": "/spec/template/spec/serviceAccountName", "value": "example-webshop-service-controller-manager"}]'\'''
 exe kubectl rollout status deployment/email -n example-webshop-service-system --timeout=1m
 
-exe echo kubectl logs -n example-webshop-service-system -l app.kubernetes.io/name=example-webshop-service
-exe echo kubectl logs -n serverless-kube-watch-trigger-system -l app.kubernetes.io/name=serverless-kube-watch-trigger
-exe echo kubectl logs -n example-webshop-service-system -l faas_function=email
+exe "echo '
+apiVersion: triggers.harikube.info/v1
+kind: HTTPTrigger
+metadata:
+  name: example-webshop-service-email
+  namespace: example-webshop-service-system
+spec:
+  resource:
+    apiVersion: product.webshop.harikube.info/v1
+    kind: Email
+  eventTypes:
+    - ADDED
+  url:
+    service:
+      name: gateway
+      namespace: openfaas
+      portName: http
+      scheme: http
+      uri:
+        static: /function/email
+  method: POST
+  body:
+    contentType: application/json
+    template: |
+      {{ toJson . }}
+  delivery:
+    timeout: 10s
+    retries: 3
+' | kubectl apply -f -
+"
 
+exe echo kubectl logs -n example-webshop-service-system -l app.kubernetes.io/name=example-webshop-service --since=0
+exe echo kubectl logs -n serverless-kube-watch-trigger-system -l app.kubernetes.io/name=serverless-kube-watch-trigger --since=0
+exe echo kubectl logs -n example-webshop-service-system -l faas_function=email --since=0
+
+sleep 5
 exe "echo '
 apiVersion: product.webshop.harikube.info/v1
 kind: RegistrationRequest
