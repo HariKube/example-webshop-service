@@ -1,5 +1,5 @@
 # example-webshop-service
-This project is an example webshop service o demonstrate development simplicity with HariKube.
+This project is an example webshop service to demonstrate development simplicity with HariKube.
 
 ## Getting Started
 
