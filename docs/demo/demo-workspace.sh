@@ -1,6 +1,7 @@
 #! /bin/bash -e
 
 : ${REGISTRY_PASSWORD?= required}
+: ${HARIKUBE_URL:=https://harikube.info}
 
 export KIND_CLUSTER=kind
 
@@ -28,10 +29,10 @@ exe kubectl create secret docker-registry harikube-registry-secret \
 --docker-username=harikube \
 --docker-password='${REGISTRY_PASSWORD}' \
 --namespace=harikube
-exe kubectl apply -f https://harikube.info/manifests/harikube-operator-beta-v1.0.0-2.yaml
-exe kubectl apply -f https://harikube.info/manifests/harikube-middleware-vcluster-workload-beta-v1.0.0-19.yaml
+exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-operator-beta-v1.0.0-3.yaml
+exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-middleware-vcluster-workload-beta-v1.0.0-20.yaml
 exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 deployment/operator-controller-manager --timeout=2m
-exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 statefulset/harikube --timeout=2m
+exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 statefulset/harikube --timeout=3m
 
 exe "echo '
 apiVersion: harikube.info/v1
@@ -122,7 +123,9 @@ rules:
 "
 exe kubectl apply -f https://github.com/HariKube/serverless-kube-watch-trigger/releases/download/beta-v1.0.0-7/bundle.yaml
 
-exe "TAG=snapshot-$(date +'%s') make docker-build docker-load install deploy config"
+exe "TAG=snapshot-$(date +'%s') make docker-build docker-load package"
+exe kubectl apply -f ./package/bundle.yaml
+exe kubectl apply -f ./package/config.yaml
 exe kubectl wait -n example-webshop-service-system --for=jsonpath='{.status.readyReplicas}'=1 deployment/example-webshop-service-controller-manager --timeout=2m
 
 exe helm repo add openfaas https://openfaas.github.io/faas-netes/
@@ -180,7 +183,7 @@ exe echo kubectl logs -n example-webshop-service-system -l app.kubernetes.io/nam
 exe echo kubectl logs -n serverless-kube-watch-trigger-system -l app.kubernetes.io/name=serverless-kube-watch-trigger --since=0
 exe echo kubectl logs -n example-webshop-service-system -l faas_function=email --since=0
 
-sleep 5
+sleep 10
 exe "echo '
 apiVersion: product.webshop.harikube.info/v1
 kind: RegistrationRequest
