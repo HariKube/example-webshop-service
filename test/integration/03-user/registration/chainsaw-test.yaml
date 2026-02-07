@@ -104,37 +104,29 @@ spec:
             - apiVersion: product.webshop.harikube.info/v1
               kind: User
               name: ($users.items[0].metadata.name)
-          # rules:
-          # - apiGroups:
-          #   - product.webshop.harikube.info
-          #   resources:
-          #   - orders
-          #   verbs:
-          #   - get
-          #   - list
-          #   - watch
-          # - apiGroups:
-          #   - product.webshop.harikube.info
-          #   resources:
-          #   - registrytokens
-          #   verbs:
-          #   - get
-          #   - list
-          #   - watch
-          #   - create
-          #   - delete
-          # - apiGroups:
-          #   - product.webshop.harikube.info
-          #   resourceNames:
-          #   - ($users.items[0].metadata.name)
-          #   resources:
-          #   - users
-          #   verbs:
-          #   - get
-          #   - list
-          #   - watch
-          #   - update
-          #   - patch
+        # bindings:
+        # - (length(rules) == `3`): true
+        # - (length(rules[?resources==`['orders']`]) == `1`): true
+        # - (rules[?resources==`['orders']`] | [0].apiGroups): ['product.webshop.harikube.info']
+        # - (contains(rules[?resources==`['orders']`] | [0].verbs, 'get')): true
+        # - (contains(rules[?resources==`['orders']`] | [0].verbs, 'list')): true
+        # - (contains(rules[?resources==`['orders']`] | [0].verbs, 'watch')): true
+        # - (length(rules[?resources==`['registrytokens']`]) == `1`): true
+        # - (rules[?resources==`['registrytokens']`] | [0].apiGroups): ['product.webshop.harikube.info']
+        # - (contains(rules[?resources==`['registrytokens']`] | [0].verbs, 'get')): true
+        # - (contains(rules[?resources==`['registrytokens']`] | [0].verbs, 'list')): true
+        # - (contains(rules[?resources==`['registrytokens']`] | [0].verbs, 'watch')): true
+        # - (contains(rules[?resources==`['registrytokens']`] | [0].verbs, 'create')): true
+        # - (contains(rules[?resources==`['registrytokens']`] | [0].verbs, 'delete')): true
+        # - (length(rules[?resourceNames!=null]) == `1`): true
+        # - (rules[?resourceNames!=null] | [0].resources): ['users']
+        # - (rules[?resourceNames!=null] | [0].apiGroups): ['product.webshop.harikube.info']
+        # - (rules[?resourceNames!=null] | [0].resourceNames): [($users.items[0].metadata.name)]
+        # - (contains(rules[?resourceNames!=null] | [0].verbs, 'get')): true
+        # - (contains(rules[?resourceNames!=null] | [0].verbs, 'list')): true
+        # - (contains(rules[?resourceNames!=null] | [0].verbs, 'watch')): true
+        # - (contains(rules[?resourceNames!=null] | [0].verbs, 'update')): true
+        # - (contains(rules[?resourceNames!=null] | [0].verbs, 'patch')): true
     - assert:
         resource:
           apiVersion: rbac.authorization.k8s.io/v1

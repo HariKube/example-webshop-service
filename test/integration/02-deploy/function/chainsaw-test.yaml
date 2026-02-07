@@ -29,9 +29,9 @@ spec:
     - script:
         content: |
           kubectl patch deployment email -n example-webshop-service-system --type='json' \
-            -p='[{"op": "replace", "path": "/spec/template/spec/serviceAccountName", "value": "example-webshop-service-controller-manager"}]'
+            -p='[{"op": "replace", "path": "/spec/template/spec/serviceAccountName", "value": "example-webshop-service-example-webshop-service-controller-manager"}]'
     - script:
-        content: kubectl rollout status deployment/email -n example-webshop-service-system --timeout=60s
+        content: kubectl rollout status deployment/email -n example-webshop-service-system --timeout=1m
     - assert:
         resource:
           apiVersion: apps/v1

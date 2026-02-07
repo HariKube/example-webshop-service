@@ -5,6 +5,8 @@
 
 export KIND_CLUSTER=kind
 
+export SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+
 exe() {
     local display_cmd="$@"
     display_cmd="${display_cmd//\$\{REGISTRY_PASSWORD\}/****}"
@@ -31,9 +33,9 @@ exe kubectl create secret docker-registry harikube-registry-secret \
 --docker-password='${REGISTRY_PASSWORD}' \
 --namespace=harikube
 exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-operator-release-v1.0.0.yaml
-exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-middleware-vcluster-workload-release-v1.0.0.yaml
+exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-middleware-vcluster-api-release-v1.0.0.yaml
 exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 deployment/operator-controller-manager --timeout=2m
-exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 statefulset/harikube --timeout=3m
+exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 statefulset/harikube --timeout=5m
 
 exe "echo '
 apiVersion: harikube.info/v1
@@ -87,10 +89,6 @@ sleep 2
 exe "kubectl logs -n harikube -l app=harikube | grep 'Backends registered' | tail -1"
 
 exe vcluster connect harikube
-
-exe kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.3/cert-manager.yaml
-exe kubectl wait -n cert-manager --for=jsonpath='{.status.readyReplicas}'=1 deployment/cert-manager-webhook --timeout=2m
-
 exe "echo '
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -122,12 +120,146 @@ rules:
   - watch
 ' | kubectl apply -f -
 "
-exe kubectl apply -f https://github.com/HariKube/serverless-kube-watch-trigger/releases/download/beta-v1.0.0-7/bundle.yaml
+exe kubectl create namespace example-webshop-service-system
+exe make install
+exe "echo '
+apiVersion: v1
+kind: Secret
+metadata:
+  name: remote-example-webshop-service-system
+  namespace: example-webshop-service-system
+  annotations:
+    kubernetes.io/service-account.name: "example-webshop-service-controller-manager"
+type: kubernetes.io/service-account-token
+' | kubectl apply -f -
+"
+exe kubectl create namespace serverless-kube-watch-trigger-system
+exe kubectl apply -f https://github.com/HariKube/serverless-kube-watch-trigger/releases/download/beta-v1.0.0-7/bundle-rbac.yaml
+exe "echo '
+apiVersion: v1
+kind: Secret
+metadata:
+  name: remote-serverless-kube-watch-trigger
+  namespace: serverless-kube-watch-trigger-system
+  annotations:
+    kubernetes.io/service-account.name: "serverless-kube-watch-trigger-controller-manager"
+type: kubernetes.io/service-account-token
+' | kubectl apply -f -
+"
+exe vcluster disconnect
+
+exe kubectl create namespace serverless-kube-watch-trigger-system
+exe 'echo "
+apiVersion: v1
+kind: Config
+clusters:
+- name: remote-serverless-kube-watch-trigger-system
+  cluster:
+    server: harikube.harikube.svc.service.local
+    certificate-authority-data: $(kubectl get secret -n harikube -l vcluster.loft.sh/namespace=serverless-kube-watch-trigger-system -o jsonpath='{.items[0].data.ca\.crt}')
+contexts:
+- name: my-context
+  context:
+    cluster: remote-serverless-kube-watch-trigger-system
+    user: remote-serverless-kube-watch-trigger-system
+    namespace: default
+current-context: my-context
+users:
+- name: remote-serverless-kube-watch-trigger-system
+  user:
+    token: $(kubectl get secret -n harikube -l vcluster.loft.sh/namespace=serverless-kube-watch-trigger-system -o jsonpath='{.items[0].data.token}')
+" | kubectl create secret generic -n serverless-kube-watch-trigger-system remote-kubeconfig --from-file=kubeconfig=/dev/stdin
+'
+exe '(cd $(mktemp -d) && echo '\''
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - https://github.com/HariKube/serverless-kube-watch-trigger/releases/download/beta-v1.0.0-7/bundle.yaml
+patches:
+  - target:
+      kind: Deployment
+      name: serverless-kube-watch-trigger-controller-manager
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: serverless-kube-watch-trigger-controller-manager
+      spec:
+        template:
+          spec:
+            containers:
+            - name: manager
+              env:
+              - name: KUBECONFIG
+                value: "/etc/kube/config"
+              volumeMounts:
+              - name: kubeconfig-volume
+                mountPath: "/etc/kube"
+                readOnly: true
+            volumes:
+            - name: kubeconfig-volume
+              secret:
+                secretName: remote-kubeconfig
+'\'' >> kustomization.yaml && kubectl kustomize .)
+'
 
 exe "TAG=snapshot-$(date +'%s') make docker-build docker-load package"
-exe kubectl apply -f ./package/bundle.yaml
+
+exe kubectl create namespace example-webshop-service-system
+exe 'echo "
+apiVersion: v1
+kind: Config
+clusters:
+- name: remote-example-webshop-service-system
+  cluster:
+    server: harikube.harikube.svc.service.local
+    certificate-authority-data: $(kubectl get secret -n harikube -l vcluster.loft.sh/namespace=example-webshop-service-system -o jsonpath='{.items[0].data.ca\.crt}')
+contexts:
+- name: my-context
+  context:
+    cluster: remote-example-webshop-service-system
+    user: remote-example-webshop-service-system
+    namespace: default
+current-context: my-context
+users:
+- name: remote-example-webshop-service-system
+  user:
+    token: $(kubectl get secret -n harikube -l vcluster.loft.sh/namespace=example-webshop-service-system -o jsonpath='{.items[0].data.token}')
+" | kubectl create secret generic -n example-webshop-service-system remote-kubeconfig --from-file=kubeconfig=/dev/stdin
+'
+exe '(cd $(mktemp -d) && cp $SCRIPT_DIR/package/bundle.yaml . && echo '\''
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - bundle.yaml
+patches:
+  - target:
+      kind: Deployment
+      name: example-webshop-service-controller-manager
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: example-webshop-service-controller-manager
+      spec:
+        template:
+          spec:
+            containers:
+            - name: manager
+              env:
+              - name: KUBECONFIG
+                value: "/etc/kube/config"
+              volumeMounts:
+              - name: kubeconfig-volume
+                mountPath: "/etc/kube"
+                readOnly: true
+            volumes:
+            - name: kubeconfig-volume
+              secret:
+                secretName: remote-kubeconfig
+'\'' >> kustomization.yaml && kubectl kustomize .)
+'
 exe kubectl apply -f ./package/config.yaml
-exe kubectl wait -n example-webshop-service-system --for=jsonpath='{.status.readyReplicas}'=1 deployment/example-webshop-service-controller-manager --timeout=2m
 
 exe helm repo add openfaas https://openfaas.github.io/faas-netes/
 exe helm repo update
@@ -143,15 +275,14 @@ exe kubectl wait -n openfaas --for=jsonpath='{.status.readyReplicas}'=1 deployme
 OPENFAASPWD=$(kubectl get secret -n openfaas basic-auth -o jsonpath='{.data.basic-auth-password}'| base64 -d)
 
 pushd function
+sed -i 's/# - remote/- remote/' stack.yaml
 exe ../bin/faas-cli template store pull python3-http
 exe ../bin/faas-cli build
 exe ../bin/faas-cli push
 exe ../bin/faas-cli login --password ${OPENFAASPWD} --gateway http://${KINEIP}:32767
 exe ../bin/faas-cli deploy --gateway http://${KINEIP}:32767
+sed -i 's/- remote/# - remote/' stack.yaml
 popd
-
-exe 'kubectl patch deployment email -n example-webshop-service-system --type=json -p='\''[{"op": "replace", "path": "/spec/template/spec/serviceAccountName", "value": "example-webshop-service-example-webshop-service-controller-manager"}]'\'''
-exe kubectl rollout status deployment/email -n example-webshop-service-system --timeout=1m
 
 exe "echo '
 apiVersion: triggers.harikube.info/v1
@@ -189,6 +320,7 @@ exe echo kubectl logs -n serverless-kube-watch-trigger-system -l app.kubernetes.
 exe echo kubectl logs -n example-webshop-service-system -l faas_function=email --since=0
 
 sleep 10
+exe vcluster connect harikube
 exe "echo '
 apiVersion: product.webshop.harikube.info/v1
 kind: RegistrationRequest

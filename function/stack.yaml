@@ -9,3 +9,4 @@ functions:
     image: quay.io/harikube/example-webshop-service-email:latest
     secrets:
       - example-webshop-service-smtp-details
+      # - remote-kubeconfig
