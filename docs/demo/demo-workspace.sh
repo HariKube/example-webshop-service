@@ -1,9 +1,9 @@
 #! /bin/bash -e
 
-: ${REGISTRY_PASSWORD?= required}
 : ${HARIKUBE_URL:=https://harikube.info}
 
 export KIND_CLUSTER=kind
+REGISTRY_PASSWORD=$(head -1 docs/demo/credential)
 
 exe() {
     local display_cmd="$@"
@@ -30,8 +30,8 @@ exe kubectl create secret docker-registry harikube-registry-secret \
 --docker-username=harikube \
 --docker-password='${REGISTRY_PASSWORD}' \
 --namespace=harikube
-exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-operator-release-v1.0.0.yaml
-exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-middleware-vcluster-workload-release-v1.0.0.yaml
+exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-operator-release-v1.0.1.yaml
+exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-middleware-vcluster-workload-release-v1.0.2.yaml
 exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 deployment/operator-controller-manager --timeout=2m
 exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 statefulset/harikube --timeout=3m
 
