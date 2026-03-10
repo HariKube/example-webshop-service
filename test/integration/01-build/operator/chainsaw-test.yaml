@@ -11,4 +11,4 @@ spec:
   - name: Build operator
     try:
     - script:
-        content: TAG=$(date +"%s") make -C ../../../.. package docker-build docker-load
+        content: make -C ../../../.. package docker-build docker-load

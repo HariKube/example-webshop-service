@@ -11,21 +11,21 @@ spec:
   - name: Deploy function
     try:
     - sleep:
-        duration: 5s
-    - apply:
-        file: ../../../../package/config.yaml
+        duration: 10s
+    - script:
+        content: kubectl apply -f ../../../../package/config-${TAG}.yaml
     - script:
         content: kubectl get secret -n openfaas basic-auth -o jsonpath='{.data.basic-auth-password}'| base64 -d
         outputs:
         - name: passwd
           value: ($stdout)
     - script:
-        content: cd ../../../../function ; ../bin/faas-cli login --password ${PASSWD} --gateway http://localhost:32767
+        content: cd ../../../../function ; faas-cli login --password ${PASSWD} --gateway http://localhost:32767
         env:
         - name: PASSWD
           value: ($passwd)
     - script:
-        content: cd ../../../../function ; ../bin/faas-cli deploy --gateway http://localhost:32767
+        content: cd ../../../../function ; faas-cli deploy --gateway http://localhost:32767
     - script:
         content: |
           kubectl patch deployment email -n example-webshop-service-system --type='json' \

@@ -276,11 +276,11 @@ OPENFAASPWD=$(kubectl get secret -n openfaas basic-auth -o jsonpath='{.data.basi
 
 pushd function
 sed -i 's/# - remote/- remote/' stack.yaml
-exe ../bin/faas-cli template store pull python3-http
-exe ../bin/faas-cli build
-exe ../bin/faas-cli push
-exe ../bin/faas-cli login --password ${OPENFAASPWD} --gateway http://${KINEIP}:32767
-exe ../bin/faas-cli deploy --gateway http://${KINEIP}:32767
+exe faas-cli template store pull python3-http
+exe faas-cli build
+exe faas-cli push
+exe faas-cli login --password ${OPENFAASPWD} --gateway http://${KINEIP}:32767
+exe faas-cli deploy --gateway http://${KINEIP}:32767
 sed -i 's/- remote/# - remote/' stack.yaml
 popd
 

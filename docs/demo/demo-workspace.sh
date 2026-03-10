@@ -143,11 +143,11 @@ exe kubectl wait -n openfaas --for=jsonpath='{.status.readyReplicas}'=1 deployme
 OPENFAASPWD=$(kubectl get secret -n openfaas basic-auth -o jsonpath='{.data.basic-auth-password}'| base64 -d)
 
 pushd function
-exe ../bin/faas-cli template store pull python3-http
-exe ../bin/faas-cli build
-exe ../bin/faas-cli push
-exe ../bin/faas-cli login --password ${OPENFAASPWD} --gateway http://${KINEIP}:32767
-exe ../bin/faas-cli deploy --gateway http://${KINEIP}:32767
+exe faas-cli template store pull python3-http
+exe faas-cli build
+exe faas-cli push
+exe faas-cli login --password ${OPENFAASPWD} --gateway http://${KINEIP}:32767
+exe faas-cli deploy --gateway http://${KINEIP}:32767
 popd
 
 exe 'kubectl patch deployment email -n example-webshop-service-system --type=json -p='\''[{"op": "replace", "path": "/spec/template/spec/serviceAccountName", "value": "example-webshop-service-example-webshop-service-controller-manager"}]'\'''

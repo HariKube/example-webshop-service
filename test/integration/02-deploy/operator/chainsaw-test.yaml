@@ -10,10 +10,12 @@ spec:
   steps:
   - name: Deploy operator
     try:
-    - apply:
-        file: ../../../../package/bundle.yaml
-    - apply:
-        file: ../../../../package/config.yaml
+    - script:
+        content: kubectl apply -f ../../../../package/bundle-${TAG}.yaml
+    - sleep:
+        duration: 5s
+    - script:
+        content: kubectl apply -f ../../../../package/config-${TAG}.yaml
     - assert:
         resource:
           apiVersion: apps/v1

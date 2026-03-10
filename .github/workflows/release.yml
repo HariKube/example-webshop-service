@@ -53,6 +53,7 @@ jobs:
       run: make package
       env:
         IMG: ${{ vars.REGISTRY }}/${{ vars.REPOSITORY }}/example-webshop-service:${{ steps.extract_branch.outputs.branch }}
+        TAG: ${{ steps.extract_branch.outputs.branch }}
     - name: Create release
       if: ${{ !startsWith(github.ref, 'refs/heads/dev-') }}
       uses: mhmxs/milestone-release-action@main
@@ -73,10 +74,13 @@ jobs:
             > Requires `MutatingAdmissionPolicy` feature gate enabled.
 
             ## Installation
-            `kubectl apply -f https://github.com/HariKube/example-webshop-service/releases/download/${{ steps.extract_branch.outputs.branch }}/bundle.yaml`
+            ```
+            kubectl apply -f https://github.com/HariKube/example-webshop-service/releases/download/${{ steps.extract_branch.outputs.branch }}/bundle-${{ steps.extract_branch.outputs.branch }}.yaml
+            kubectl apply -f https://github.com/HariKube/example-webshop-service/releases/download/${{ steps.extract_branch.outputs.branch }}/config-${{ steps.extract_branch.outputs.branch }}.yaml
+            ```
 
             ## Release Notes
         draft: true
         prerelease: ${{ startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/beta-') || startsWith(github.ref, 'refs/heads/alpha-') }}
-        files: package/bundle.yaml
+        files: package/bundle-${{ steps.extract_branch.outputs.branch }}.yaml,package/config-${{ steps.extract_branch.outputs.branch }}.yaml
   
