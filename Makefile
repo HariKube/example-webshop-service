@@ -254,5 +254,5 @@ package: manifests generate
 
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 
-	$(KUSTOMIZE) build config/default >> package/bundle-$(TAG).yaml
-	$(KUSTOMIZE) build config/config >> package/config-$(TAG).yaml
+	rm -f package/bundle-$(TAG).yaml ; $(KUSTOMIZE) build config/default >> package/bundle-$(TAG).yaml
+	rm -f package/config-$(TAG).yaml ; $(KUSTOMIZE) build config/config >> package/config-$(TAG).yaml
