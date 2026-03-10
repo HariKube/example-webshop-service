@@ -249,11 +249,6 @@ mv $(1) $(1)-$(3) ;\
 ln -sf $(1)-$(3) $(1)
 endef
 
-deps: setup-envtest _devbox-install
-
-_devbox-install:
-	devbox install
-
 package: manifests generate
 	mkdir -p package
 
