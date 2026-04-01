@@ -31,7 +31,7 @@ exe kubectl create secret docker-registry harikube-registry-secret \
 --docker-password='${REGISTRY_PASSWORD}' \
 --namespace=harikube
 exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-operator-release-v1.0.1.yaml
-exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-middleware-vcluster-workload-release-v1.0.2.yaml
+exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-middleware-vcluster-workload-release-v1.0.3.yaml
 exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 deployment/operator-controller-manager --timeout=2m
 exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 statefulset/harikube --timeout=3m
 
