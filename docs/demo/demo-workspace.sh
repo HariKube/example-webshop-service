@@ -124,9 +124,10 @@ rules:
 "
 exe kubectl apply -f https://github.com/HariKube/serverless-kube-watch-trigger/releases/download/beta-v1.0.0-7/bundle.yaml
 
-exe "TAG=snapshot-$(date +'%s') make docker-build docker-load package"
-exe kubectl apply -f ./package/bundle.yaml
-exe kubectl apply -f ./package/config.yaml
+TAG=snapshot-$(date +'%s')
+exe "TAG=${TAG} make docker-build docker-load package"
+exe kubectl apply -f ./package/bundle-${TAG}.yaml
+exe kubectl apply -f ./package/config-${TAG}.yaml
 exe kubectl wait -n example-webshop-service-system --for=jsonpath='{.status.readyReplicas}'=1 deployment/example-webshop-service-controller-manager --timeout=2m
 
 exe helm repo add openfaas https://openfaas.github.io/faas-netes/

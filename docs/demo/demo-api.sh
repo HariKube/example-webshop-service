@@ -203,7 +203,8 @@ patches:
 '\'' >> kustomization.yaml && kubectl kustomize .)
 '
 
-exe "TAG=snapshot-$(date +'%s') make docker-build docker-load package"
+TAG=snapshot-$(date +'%s')
+exe "TAG=${TAG} make docker-build docker-load package"
 
 exe kubectl create namespace example-webshop-service-system
 exe 'echo "
@@ -227,11 +228,11 @@ users:
     token: $(kubectl get secret -n harikube -l vcluster.loft.sh/namespace=example-webshop-service-system -o jsonpath='{.items[0].data.token}')
 " | kubectl create secret generic -n example-webshop-service-system remote-kubeconfig --from-file=kubeconfig=/dev/stdin
 '
-exe '(cd $(mktemp -d) && cp $SCRIPT_DIR/package/bundle.yaml . && echo '\''
+exe '(cd $(mktemp -d) && cp $SCRIPT_DIR/package/bundle-${TAG}.yaml . && echo '\''
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - bundle.yaml
+  - bundle-${TAG}.yaml
 patches:
   - target:
       kind: Deployment
@@ -259,7 +260,7 @@ patches:
                 secretName: remote-kubeconfig
 '\'' >> kustomization.yaml && kubectl kustomize .)
 '
-exe kubectl apply -f ./package/config.yaml
+exe kubectl apply -f ./package/config-${TAG}.yaml
 
 exe helm repo add openfaas https://openfaas.github.io/faas-netes/
 exe helm repo update
