@@ -66,15 +66,15 @@ def handle(event, context):
         from_name = spec.get('fromName')
         from_address = spec.get('fromAddress')
         subject = spec.get('subject')
-        body_content = spec.get('body')
+        body_content = spec.get('body', '')
         
         log(f"Email details: to={to_address}, from={from_name} <{from_address}>, subject={subject}")
         
         # Validate required fields
-        if not all([to_address, from_name, from_address, subject, body_content]):
+        if not all([to_address, from_name, from_address, subject]):
             error_msg = "Missing required fields in Email spec"
             log(error_msg, "ERROR")
-            log(f"Present fields: toAddress={bool(to_address)}, fromName={bool(from_name)}, fromAddress={bool(from_address)}, subject={bool(subject)}, body={bool(body_content)}", "ERROR")
+            log(f"Present fields: toAddress={bool(to_address)}, fromName={bool(from_name)}, fromAddress={bool(from_address)}, subject={bool(subject)}", "ERROR")
             patch_email_status(
                 name=name,
                 namespace=namespace,
@@ -86,7 +86,7 @@ def handle(event, context):
                 "statusCode": 400,
                 "body": json.dumps({
                     "error": error_msg,
-                    "required": ["toAddress", "fromName", "fromAddress", "subject", "body"]
+                    "required": ["toAddress", "fromName", "fromAddress", "subject"]
                 })
             }
         

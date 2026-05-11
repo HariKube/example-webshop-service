@@ -138,7 +138,7 @@ exe helm upgrade openfaas --install openfaas/openfaas \
 --set functionNamespace=example-webshop-service-system \
 --set serviceType=NodePort \
 --set gateway.nodePort=32767
-exe kubectl wait -n openfaas --for=jsonpath='{.status.readyReplicas}'=1 deployment/gateway --timeout=2m
+exe kubectl wait -n openfaas --for=jsonpath='{.status.readyReplicas}'=1 deployment/gateway --timeout=3m
 
 OPENFAASPWD=$(kubectl get secret -n openfaas basic-auth -o jsonpath='{.data.basic-auth-password}'| base64 -d)
 

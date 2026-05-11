@@ -46,9 +46,8 @@ type EmailSpec struct {
 	// Subject represents the subject of the email.
 	Subject string `json:"subject"`
 
-	// +kubebuilder:validation:Required
 	// Body represents the body content of the email.
-	Body string `json:"body"`
+	Body string `json:"body,omitempty"`
 }
 
 // EmailStatus defines the observed state of Email.
