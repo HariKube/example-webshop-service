@@ -51,6 +51,8 @@ jobs:
           password: ${{ secrets.REGISTRY_TOKEN }}
       
       - name: Running Test Integration
-        run: devbox run make package test-integration
+        run: |
+          cp config/config/email-smtp-secret-sample.yaml config/config/email-smtp-secret.yaml
+          devbox run make package test-integration
         env:
           TAG: snapshot
