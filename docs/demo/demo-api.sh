@@ -26,16 +26,15 @@ exe kubectl apply -f https://github.com/prometheus-operator/prometheus-operator/
 exe kubectl wait -n cert-manager --for=jsonpath='{.status.readyReplicas}'=1 deployment/cert-manager-webhook --timeout=2m
 
 exe kubectl create namespace harikube
+exe kubectl label namespace harikube harikube.info/middleware=enabled --overwrite
 exe kubectl create secret generic -n harikube harikube-license --from-file=docs/demo/license
 exe kubectl create secret docker-registry harikube-registry-secret \
 --docker-server=registry.harikube.info \
 --docker-username=harikube \
 --docker-password='${REGISTRY_PASSWORD}' \
 --namespace=harikube
-exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-operator-release-v1.0.1.yaml
-exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-middleware-vcluster-api-release-v1.0.3.yaml
-exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 deployment/operator-controller-manager --timeout=2m
-exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 statefulset/harikube --timeout=5m
+exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-middleware-vcluster-api-release-v1.0.4.yaml
+exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 statefulset/harikube-vcluster --timeout=5m
 
 exe "echo '
 apiVersion: harikube.info/v1
@@ -88,7 +87,7 @@ spec:
 sleep 2
 exe "kubectl logs -n harikube -l app=harikube | grep 'Backends registered' | tail -1"
 
-exe vcluster connect harikube
+exe vcluster connect harikube-vcluster
 exe "echo '
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -321,7 +320,7 @@ exe echo kubectl logs -n serverless-kube-watch-trigger-system -l app.kubernetes.
 exe echo kubectl logs -n example-webshop-service-system -l faas_function=email --since=0
 
 sleep 10
-exe vcluster connect harikube
+exe vcluster connect harikube-vcluster
 exe "echo '
 apiVersion: product.webshop.harikube.info/v1
 kind: RegistrationRequest
@@ -341,3 +340,6 @@ spec:
     taxNumber: ABC-123456789
 ' | kubectl create --raw /apis/api.product.webshop.harikube.info/v1/registrations/richard-kovacs -f -
 "
+
+sleep 5
+exe "kubectl get emails -A -o yaml"
