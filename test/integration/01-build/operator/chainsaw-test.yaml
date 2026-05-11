@@ -11,4 +11,6 @@ spec:
   - name: Build operator
     try:
     - script:
+        content: cp ../../../../config/config/email-smtp-secret-sample.yaml ../../../../config/config/email-smtp-secret.yaml || true
+    - script:
         content: make -C ../../../.. package docker-build docker-load
